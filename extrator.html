@@ -3,8 +3,8 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Extrator e Filtro de Planilha</title>
-    <!-- Biblioteca SheetJS para leitura de Excel -->
+    <title>Extrator e Seletor de Colunas</title>
+    <!-- Biblioteca SheetJS para leitura de Excel no navegador -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
     <style>
         body {
@@ -35,7 +35,6 @@
         .control-group {
             margin-bottom: 12px;
         }
-        .control-group:last-child { margin-bottom: 0; }
         
         label { font-size: 13px; font-weight: bold; color: #2d3748; display: block; margin-bottom: 4px; }
         
@@ -53,7 +52,7 @@
             background: #edf2f7;
             padding: 12px;
             border-radius: 6px;
-            margin-top: 10px;
+            margin-top: 5px;
             border: 2px dashed #cbd5e0;
             text-align: center;
         }
@@ -76,6 +75,29 @@
             font-size: 12px;
             color: #4a5568;
             word-break: break-all;
+        }
+
+        /* Área de seleção de colunas dinamicas */
+        .checkbox-container {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
+            gap: 8px;
+            background: #fff;
+            border: 1px solid #cbd5e0;
+            padding: 10px;
+            border-radius: 4px;
+            max-height: 150px;
+            overflow-y: auto;
+            margin-top: 5px;
+        }
+        .checkbox-item {
+            font-size: 12px;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+        .checkbox-item input {
+            width: auto;
         }
 
         .table-responsive {
@@ -122,6 +144,21 @@
         }
         .btn-action:hover { background-color: #2c7a7b; }
 
+        .btn-print {
+            background-color: #d97706;
+            color: white;
+            border: none;
+            font-weight: bold;
+            cursor: pointer;
+            padding: 10px;
+            margin-top: 10px;
+            border-radius: 4px;
+            width: 100%;
+            font-size: 14px;
+            display: none;
+        }
+        .btn-print:hover { background-color: #b45309; }
+
         .btn-back {
             display: block;
             width: 100%;
@@ -137,16 +174,35 @@
             margin-top: 15px;
         }
         .btn-back:hover { background-color: #2d3748; }
+
+        @media print {
+            body { background-color: #fff; padding: 0; }
+            .container { box-shadow: none; padding: 0; max-width: 100%; }
+            .form-section, .btn-action, .btn-print, .btn-back { display: none; }
+            .table-responsive { max-height: none; border: none; }
+            table { width: 100%; }
+        }
     </style>
 </head>
 <body>
 
 <div class="container">
-    <h2>Extrator e Filtro de Planilha</h2>
+    <h2>Extrator e Seletor de Colunas</h2>
     
     <div class="form-section">
         <div class="control-group">
-            <label for="cidadeFiltro">Filtrar por Cidade (Opcional):</label>
+            <label>1. Carregar Planilha Excel:</label>
+            <div class="upload-section">
+                <label for="arquivoExcel" class="custom-file-upload">
+                    📊 Escolher Arquivo (.xlsx, .xls, .csv)
+                </label>
+                <input type="file" id="arquivoExcel" accept=".xlsx, .xls, .csv" onchange="carregarArquivo(event)">
+                <div id="nomeArquivo" class="file-name">Nenhum arquivo selecionado</div>
+            </div>
+        </div>
+
+        <div class="control-group" style="margin-top: 12px;">
+            <label for="cidadeFiltro">2. Filtrar por Cidade (Opcional):</label>
             <input list="cidadesRS" id="cidadeFiltro" placeholder="Ex: Canoas (Deixe em branco para todas)...">
             <datalist id="cidadesRS">
                 <option value="Canoas">
@@ -164,31 +220,28 @@
         </div>
 
         <div class="control-group" style="margin-top: 12px;">
-            <label>Carregar Planilha do Relatório:</label>
-            <div class="upload-section">
-                <label for="arquivoExcel" class="custom-file-upload">
-                    📊 Escolher Arquivo Excel (.xlsx, .xls, .csv)
-                </label>
-                <input type="file" id="arquivoExcel" accept=".xlsx, .xls, .csv" onchange="carregarArquivo(event)">
-                <div id="nomeArquivo" class="file-name">Nenhum arquivo selecionado</div>
+            <label>3. Selecione quais colunas deseja extrair:</label>
+            <div id="seletorColunas" class="checkbox-container">
+                <span style="font-size: 12px; color: #718096; padding: 5px;">Carregue uma planilha primeiro...</span>
             </div>
         </div>
 
-        <button class="btn-action" onclick="processarFiltro()" id="btnProcessar" disabled>⚙️ Filtrar e Organizar Dados</button>
+        <button class="btn-action" onclick="processarExtracao()" id="btnProcessar" disabled>⚙️ Extrair e Gerar Lista</button>
     </div>
 
     <div id="relatorio-conteudo">
-        <h3 style="font-size: 14px; margin-bottom: 5px; color: #2d3748;">Dados Filtrados (<span id="contadorLinhas">0</span> registros)</h3>
+        <h3 style="font-size: 14px; margin-bottom: 5px; color: #2d3748;">Resultado Extraído (<span id="contadorLinhas">0</span> registros)</h3>
         <div class="table-responsive">
             <table id="tabelaDados">
                 <thead id="cabecalhoTabela">
-                    <tr><th>Aguardando planilha...</th></tr>
+                    <tr><th>Aguardando processamento...</th></tr>
                 </thead>
                 <tbody id="corpoTabela">
-                    <tr><td>Selecione um arquivo e clique em filtrar.</td></tr>
+                    <tr><td>Sua lista aparecerá aqui.</td></tr>
                 </tbody>
             </table>
         </div>
+        <button class="btn-print" id="btnImprimir" onclick="window.print()">🖨️ Imprimir / Salvar em PDF</button>
     </div>
 
     <a href="index.html" class="btn-back">⬅️ Voltar para o Menu Principal</a>
@@ -216,36 +269,62 @@
                 if (json.length > 0) {
                     cabecalhosGlobais = json[0];
                     dadosBrutos = json.slice(1);
+                    gerarCheckboxesColunas(cabecalhosGlobais);
                     document.getElementById('btnProcessar').disabled = false;
-                    alert("Planilha carregada com sucesso! Clique em 'Filtrar e Organizar Dados'.");
                 }
             } catch (erro) {
                 console.error(erro);
-                alert("Erro ao ler o arquivo.");
+                alert("Erro ao ler o arquivo Excel.");
             }
         };
         leitor.readAsArrayBuffer(arquivo);
     }
 
-    function processarFiltro() {
+    function gerarCheckboxesColunas(cabecalhos) {
+        const container = document.getElementById('seletorColunas');
+        container.innerHTML = '';
+
+        cabecalhos.forEach((col, index) => {
+            if (col !== undefined && col !== null && col !== '') {
+                let div = document.createElement('div');
+                div.className = 'checkbox-item';
+                div.innerHTML = `
+                    <input type="checkbox" id="col_${index}" value="${index}" checked>
+                    <label for="col_${index}" style="display:inline; font-weight:normal; cursor:pointer;">${col}</label>
+                `;
+                container.appendChild(div);
+            }
+        });
+    }
+
+    function processarExtracao() {
         if (dadosBrutos.length === 0) return;
 
+        // Pega os índices das colunas marcadas
+        const checkboxes = document.querySelectorAll('#seletorColunas input[type="checkbox"]:checked');
+        let indicesSelecionados = Array.from(checkboxes).map(cb => parseInt(cb.value));
+
+        if (indicesSelecionados.length === 0) {
+            alert("Selecione pelo menos uma coluna para extrair.");
+            return;
+        }
+
         const cidadeBusca = document.getElementById('cidadeFiltro').value.trim().toLowerCase();
-        
-        // Filtra as linhas com base na cidade digitada (se preenchida)
+
+        // Filtra por cidade se preenchido
         let dadosFiltrados = dadosBrutos.filter(linha => {
             if (!cidadeBusca) return true;
-            // Varre as colunas da linha procurando pelo texto da cidade
             return linha.some(celula => celula && celula.toString().toLowerCase().includes(cidadeBusca));
         });
 
-        renderizarTabela(cabecalhosGlobais, dadosFiltrados);
+        renderizarTabelaCustomizada(indicesSelecionados, dadosFiltrados);
     }
 
-    function renderizarTabela(cabecalhos, linhas) {
+    function renderizarTabelaCustomizada(indices, linhas) {
         const thead = document.getElementById('cabecalhoTabela');
         const tbody = document.getElementById('corpoTabela');
         const contador = document.getElementById('contadorLinhas');
+        const btnImprimir = document.getElementById('btnImprimir');
 
         thead.innerHTML = '';
         tbody.innerHTML = '';
@@ -253,25 +332,27 @@
 
         if (linhas.length === 0) {
             tbody.innerHTML = `<tr><td>Nenhum registro encontrado para este filtro.</td></tr>`;
+            btnImprimir.style.display = 'none';
             return;
         }
 
-        // Monta cabeçalho
+        // Monta cabeçalho apenas com as colunas escolhidas
         let trHead = '<tr>';
-        cabecalhos.forEach(col => {
-            trHead += `<th>${col !== undefined ? col : ''}</th>`;
+        indices.forEach(idx => {
+            let nomeColuna = cabecalhosGlobais[idx] || `Coluna ${idx}`;
+            trHead += `<th>${nomeColuna}</th>`;
         });
         trHead += '</tr>';
         thead.innerHTML = trHead;
 
-        // Monta linhas
+        // Monta as linhas correspondentes
         linhas.forEach(linha => {
             let tr = document.createElement('tr');
             let linhaHtml = '';
             let vazia = true;
 
-            cabecalhos.forEach((_, index) => {
-                let valor = linha[index] !== undefined ? linha[index] : '';
+            indices.forEach(idx => {
+                let valor = linha[idx] !== undefined ? linha[idx] : '';
                 if (valor !== '') vazia = false;
                 linhaHtml += `<td>${valor}</td>`;
             });
@@ -281,6 +362,8 @@
                 tbody.appendChild(tr);
             }
         });
+
+        btnImprimir.style.display = 'block';
     }
 </script>
 
