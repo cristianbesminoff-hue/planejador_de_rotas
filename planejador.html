@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Planejador de Rotas Inteligente</title>
+    <title>Planejador de Rotas - RS</title>
     <style>
         body {
             font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
@@ -13,10 +13,10 @@
             color: #333;
         }
         .container {
-            max-width: 600px;
+            max-width: 900px;
             margin: 0 auto;
             background: #fff;
-            padding: 15px;
+            padding: 20px;
             border-radius: 8px;
             box-shadow: 0 2px 5px rgba(0,0,0,0.1);
             box-sizing: border-box;
@@ -26,18 +26,17 @@
         .form-section {
             background: #f8fafc;
             border: 1px solid #e2e8f0;
-            padding: 12px;
+            padding: 15px;
             border-radius: 6px;
             margin-bottom: 15px;
         }
         .control-group {
             margin-bottom: 12px;
         }
-        .control-group:last-child { margin-bottom: 0; }
         
         label { font-size: 13px; font-weight: bold; color: #2d3748; display: block; margin-bottom: 4px; }
         
-        input, select {
+        input {
             width: 100%;
             padding: 10px;
             font-size: 14px;
@@ -46,7 +45,7 @@
             box-sizing: border-box;
             background-color: #fff;
         }
-        
+
         .btn-add {
             background-color: #2b6cb0;
             color: white;
@@ -54,33 +53,20 @@
             font-weight: bold;
             cursor: pointer;
             padding: 10px;
-            margin-top: 5px;
+            margin-top: 8px;
             border-radius: 4px;
             width: 100%;
+            font-size: 14px;
         }
         .btn-add:hover { background-color: #2c5282; }
-
-        .btn-maps {
-            background-color: #d97706;
-            color: white;
-            border: none;
-            font-weight: bold;
-            cursor: pointer;
-            padding: 12px;
-            margin-top: 15px;
-            border-radius: 4px;
-            width: 100%;
-            font-size: 15px;
-        }
-        .btn-maps:hover { background-color: #b45309; }
-        .btn-maps:disabled { background-color: #cbd5e0; cursor: not-allowed; }
 
         .table-responsive {
             width: 100%;
             overflow-x: auto;
-            margin-top: 10px;
+            margin-top: 15px;
             border: 1px solid #cbd5e0;
             border-radius: 4px;
+            max-height: 300px;
         }
 
         table {
@@ -96,175 +82,185 @@
         th {
             background-color: #2b6cb0;
             color: white;
+            position: sticky;
+            top: 0;
         }
         tr:nth-child(even) { background-color: #f7fafc; }
-        
-        .btn-del {
+
+        .btn-delete {
             background-color: #e53e3e;
             color: white;
             border: none;
             padding: 4px 8px;
-            border-radius: 3px;
+            border-radius: 4px;
             cursor: pointer;
             font-size: 11px;
         }
-        .btn-del:hover { background-color: #c53030; }
+        .btn-delete:hover { background-color: #c53030; }
+
+        .btn-action {
+            background-color: #319795;
+            color: white;
+            border: none;
+            font-weight: bold;
+            cursor: pointer;
+            padding: 12px;
+            margin-top: 15px;
+            border-radius: 4px;
+            width: 100%;
+            font-size: 14px;
+        }
+        .btn-action:hover { background-color: #2c7a7b; }
+
+        .btn-back {
+            display: block;
+            width: 100%;
+            padding: 12px;
+            background-color: #4a5568;
+            color: white;
+            text-align: center;
+            text-decoration: none;
+            font-weight: bold;
+            font-size: 14px;
+            border-radius: 6px;
+            box-sizing: border-box;
+            margin-top: 15px;
+        }
+        .btn-back:hover { background-color: #2d3748; }
     </style>
 </head>
 <body>
 
 <div class="container">
-    <h2>Planejador de Rotas</h2>
+    <h2>Planejador de Rotas - Rio Grande do Sul</h2>
     
     <div class="form-section">
         <div class="control-group">
-            <label for="cidadeSelect">Cidade:</label>
-            <input list="cidadesRS" id="cidadeSelect" placeholder="Digite para buscar a cidade (Ex: Canoas)..." value="Canoas - RS">
-            <datalist id="cidadesRS">
-                <option value="Canoas - RS">
-                <option value="Porto Alegre - RS">
-                <option value="Cachoeirinha - RS">
-                <option value="Nova Santa Rita - RS">
-                <option value="Esteio - RS">
-                <option value="Sapucaia do Sul - RS">
-                <option value="São Leopoldo - RS">
-                <option value="Novo Hamburgo - RS">
-                <option value="Alvorada - RS">
-                <option value="Gravataí - RS">
-                <option value="Viamão - RS">
-                <option value="Três Coroas - RS">
-                <option value="Gramado - RS">
-                <option value="Canela - RS">
-                <option value="Caxias do Sul - RS">
-                <option value="Pelotas - RS">
-                <option value="Santa Maria - RS">
+            <label for="cidadeSelect">1. Selecione a Cidade no RS (497 municípios):</label>
+            <input list="listaCidadesRS" id="cidadeSelect" placeholder="Digite ou selecione a cidade...">
+            <datalist id="listaCidadesRS">
+                <option value="Carregando cidades do RS...">
             </datalist>
         </div>
 
-        <div class="control-group" style="margin-top: 10px;">
-            <label for="pontoPartida">Ponto de Partida (Opcional - Ex: Base / Rua):</label>
-            <input type="text" id="pontoPartida" placeholder="Ex: Rua Exemplo, 100">
+        <div class="control-group">
+            <label for="enderecoInput">2. Endereço / Rua e Número:</label>
+            <input type="text" id="enderecoInput" placeholder="Ex: Av. Getúlio Vargas, 1200">
         </div>
 
-        <div class="control-group" style="margin-top: 10px;">
-            <label for="enderecoInput">Endereço de Atendimento (Rua e Número/CEP):</label>
-            <input type="text" id="enderecoInput" placeholder="Ex: Rua Jaguarão, 106 ou 92330-330" onkeypress="checarEnter(event)">
-        </div>
-
-        <button class="btn-add" onclick="adicionarEndereco()">➕ Adicionar à Rota</button>
+        <button class="btn-add" onclick="adicionarParada()">➕ Adicionar à Rota</button>
     </div>
 
-    <div class="controls-panel">
-        <h3 style="font-size: 14px; color: #2d3748; margin-bottom: 5px;">Paradas Adicionadas (<span id="contadorParadas">0</span>)</h3>
+    <div>
+        <h3 style="font-size: 14px; margin-bottom: 5px; color: #2d3748;">Paradas na Rota (<span id="contadorParadas">0</span>)</h3>
         <div class="table-responsive">
             <table>
                 <thead>
                     <tr>
-                        <th>Endereço / Destino</th>
-                        <th style="width: 60px; text-align: center;">Ação</th>
+                        <th style="width: 35%;">Cidade</th>
+                        <th style="width: 50%;">Endereço</th>
+                        <th style="width: 15%; text-align: center;">Ações</th>
                     </tr>
                 </thead>
-                <tbody id="corpoTabela">
-                    <tr><td colspan="2" style="text-align: center; color: #718096;">Nenhum endereço adicionado ainda.</td></tr>
+                <tbody id="corpoTabelaRotas">
+                    <tr><td colspan="3" style="text-align: center; color: #718096;">Nenhuma parada adicionada ainda.</td></tr>
                 </tbody>
             </table>
         </div>
-
-        <button class="btn-maps" onclick="abrirGoogleMaps()" id="btnMaps" disabled>🗺️ Abrir Rota Completa no Google Maps</button>
+        <button class="btn-action" id="btnGerarRota" onclick="gerarRotaMaps()" style="display: none;">🗺️ Abrir Rota Completa no Google Maps</button>
     </div>
+
+    <a href="index.html" class="btn-back">⬅️ Voltar para o Menu Principal</a>
 </div>
 
 <script>
-    let listaEnderecos = [];
+    let paradas = [];
 
-    function checarEnter(e) {
-        if (e.key === 'Enter') {
-            adicionarEndereco();
-        }
-    }
+    // Carrega automaticamente todas as 497 cidades do RS via API oficial do IBGE ao abrir a página
+    window.onload = function() {
+        fetch('https://servicodados.ibge.gov.br/api/v1/localidades/estados/43/municipios')
+            .then(response => response.json())
+            .then(municipios => {
+                const datalist = document.getElementById('listaCidadesRS');
+                datalist.innerHTML = ''; // Limpa o aviso de carregamento
+                municipios.sort((a, b) => a.nome.localeCompare(b.nome)); // Organiza em ordem alfabética
+                municipios.forEach(mun => {
+                    let option = document.createElement('option');
+                    option.value = mun.nome;
+                    datalist.appendChild(option);
+                });
+            })
+            .catch(error => {
+                console.error('Erro ao carregar municípios do IBGE:', error);
+                document.getElementById('listaCidadesRS').innerHTML = '<option value="Erro ao carregar cidades. Digite manualmente.">';
+            });
+    };
 
-    function adicionarEndereco() {
-        const ruaInput = document.getElementById('enderecoInput');
-        const cidadeInput = document.getElementById('cidadeSelect');
-        
-        let rua = ruaInput.value.trim();
-        let cidade = cidadeInput.value.trim();
+    function adicionarParada() {
+        const cidade = document.getElementById('cidadeSelect').value.trim();
+        const endereco = document.getElementById('enderecoInput').value.trim();
 
-        if (!rua) {
-            alert("Digite o endereço ou CEP.");
+        if (!cidade || !endereco) {
+            alert("Por favor, preencha tanto a cidade quanto o endereço.");
             return;
         }
 
-        if (!cidade) {
-            cidade = "Canoas - RS";
-        }
+        paradas.push({ cidade, endereco });
+        
+        // Limpa apenas o endereço para facilitar a próxima digitação rápida da mesma cidade
+        document.getElementById('enderecoInput').value = '';
+        document.getElementById('enderecoInput').focus();
 
-        let enderecoCompleto = `${rua}, ${cidade}`;
-        listaEnderecos.push(enderecoCompleto);
-
-        ruaInput.value = '';
-        ruaInput.focus();
-
-        atualizarTabela();
+        atualizarTabelaRotas();
     }
 
-    function removerEndereco(index) {
-        listaEnderecos.splice(index, 1);
-        atualizarTabela();
+    function removerParada(index) {
+        paradas.splice(index, 1);
+        atualizarTabelaRotas();
     }
 
-    function atualizarTabela() {
-        const tbody = document.getElementById('corpoTabela');
+    function atualizarTabelaRotas() {
+        const tbody = document.getElementById('corpoTabelaRotas');
         const contador = document.getElementById('contadorParadas');
-        const btnMaps = document.getElementById('btnMaps');
+        const btnGerar = document.getElementById('btnGerarRota');
 
         tbody.innerHTML = '';
-        contador.innerText = listaEnderecos.length;
+        contador.innerText = paradas.length;
 
-        if (listaEnderecos.length === 0) {
-            tbody.innerHTML = `<tr><td colspan="2" style="text-align: center; color: #718096;">Nenhum endereço adicionado ainda.</td></tr>`;
-            btnMaps.disabled = true;
+        if (paradas.length === 0) {
+            tbody.innerHTML = `<tr><td colspan="3" style="text-align: center; color: #718096;">Nenhuma parada adicionada ainda.</td></tr>`;
+            btnGerar.style.display = 'none';
             return;
         }
 
-        listaEnderecos.forEach((end, index) => {
+        paradas.forEach((parada, index) => {
             let tr = document.createElement('tr');
             tr.innerHTML = `
-                <td>${end}</td>
-                <td style="text-align: center;"><button class="btn-del" onclick="removerEndereco(${index})">Excluir</button></td>
+                <td><strong>${parada.cidade}</strong></td>
+                <td>${parada.endereco}</td>
+                <td style="text-align: center;"><button class="btn-delete" onclick="removerParada(${index})">Excluir</button></td>
             `;
             tbody.appendChild(tr);
         });
 
-        btnMaps.disabled = false;
+        btnGerar.style.display = 'block';
     }
 
-    function abrirGoogleMaps() {
-        const pontoPartida = document.getElementById('pontoPartida').value.trim();
-        const cidadePadrao = document.getElementById('cidadeSelect').value.trim();
+    function gerarRotaMaps() {
+        if (paradas.length === 0) return;
 
-        if (listaEnderecos.length === 0) {
-            alert("Adicione pelo menos um endereço.");
-            return;
+        // Formata os pontos de parada para a API de rotas diretas do Google Maps
+        let origem = encodeURIComponent(paradas[0].endereco + ", " + paradas[0].cidade + " - RS");
+        let destino = encodeURIComponent(paradas[paradas.length - 1].endereco + ", " + paradas[paradas.length - 1].cidade + " - RS");
+        
+        let waypointsStr = "";
+        if (paradas.length > 2) {
+            let intermediarias = paradas.slice(1, paradas.length - 1);
+            let arrayWp = intermediarias.map(p => encodeURIComponent(p.endereco + ", " + p.cidade + " - RS"));
+            waypointsStr = "&waypoints=" + arrayWp.join("|");
         }
 
-        let pontosParaRota = [];
-
-        if (pontoPartida) {
-            let partidaCompleta = pontoPartida.toLowerCase().includes('rs') ? pontoPartida : `${pontoPartida}, ${cidadePadrao}`;
-            pontosParaRota.push(encodeURIComponent(partidaCompleta));
-        }
-
-        listaEnderecos.forEach(end => {
-            pontosParaRota.push(encodeURIComponent(end));
-        });
-
-        if (pontosParaRota.length > 25) {
-            alert("O Google Maps aceita no máximo 25 paradas por vez. O sistema abrirá os primeiros 25 pontos.");
-            pontosParaRota = pontosParaRota.slice(0, 25);
-        }
-
-        let urlMaps = `https://www.google.com/maps/dir/${pontosParaRota.join('/')}`;
+        const urlMaps = `https://www.google.com/maps/dir/?api=1&origin=${origem}&destination=${destino}${waypointsStr}&travelmode=driving`;
         window.open(urlMaps, '_blank');
     }
 </script>
