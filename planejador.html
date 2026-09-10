@@ -4,7 +4,6 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Gerador de Rotas via PDF</title>
-    <!-- Biblioteca PDF.js otimizada para carregar sem conflitos locais -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/2.16.105/pdf.min.js"></script>
     <style>
         body {
@@ -120,11 +119,11 @@
 <body>
 
 <div class="container">
-    <h2>Gerador de Rotas via PDF</h2>
+    <h2>Planejador de Rotas via PDF</h2>
     
     <div class="upload-section">
         <label for="arquivoPdf" class="custom-file-upload">
-            📂 Escolher Relatório em PDF (.pdf)
+            📂 Escolher Relatório Operacional (.pdf)
         </label>
         <input type="file" id="arquivoPdf" accept=".pdf" onchange="lerPDF(event)">
         <div id="nomeArquivo" class="file-name">Nenhum arquivo selecionado</div>
@@ -133,25 +132,25 @@
     <div class="controls-panel">
         <div class="control-group">
             <label for="pontoPartida">Ponto de Partida (Opcional - Ex: Base Canoas):</label>
-            <input type="text" id="pontoPartida" placeholder="Ex: Rua Exemplo, Canoas">
+            <input type="text" id="pontoPartida" placeholder="Ex: Rua Exemplo, Canoas - RS">
         </div>
 
         <div class="control-group" style="margin-top: 15px;">
-            <button class="btn-maps" onclick="abrirGoogleMaps()" id="btnMaps" disabled>🗺️ Abrir Rota do PDF no Google Maps</button>
+            <button class="btn-maps" onclick="abrirGoogleMaps()" id="btnMaps" disabled>🗺️ Abrir Rota Completa no Google Maps</button>
         </div>
     </div>
 
     <div id="relatorio-conteudo">
-        <h3 style="font-size: 15px; margin-bottom: 5px; color: #2d3748;">Endereços Extraídos do PDF</h3>
+        <h3 style="font-size: 15px; margin-bottom: 5px; color: #2d3748;">Endereços Identificados para a Rota</h3>
         <div class="table-responsive">
             <table id="tabelaDados">
                 <thead>
                     <tr>
-                        <th>Endereços Identificados</th>
+                        <th>Endereço Formatado</th>
                     </tr>
                 </thead>
                 <tbody id="corpoTabela">
-                    <tr><td>Aguardando upload de arquivo PDF...</td></tr>
+                    <tr><td>Aguardando upload do relatório em PDF...</td></tr>
                 </tbody>
             </table>
         </div>
@@ -159,7 +158,6 @@
 </div>
 
 <script>
-    // Configuração do Worker local seguro
     pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/2.16.105/pdf.worker.min.js';
 
     let enderecosExtraidos = [];
@@ -174,52 +172,69 @@
         leitor.onload = async function(e) {
             try {
                 const typedarray = new Uint8Array(e.target.result);
-                const loadingTask = pdfjsLib.getDocument({ data: typedarray });
-                const pdf = await loadingTask.promise;
+                const pdf = await pdfjsLib.getDocument({ data: typedarray }).promise;
                 
-                enderecosExtraidos = [];
+                let itensTexto = [];
 
                 for (let i = 1; i <= pdf.numPages; i++) {
                     const pagina = await pdf.getPage(i);
                     const conteudoTextual = await pagina.getTextContent();
                     
+                    // Organiza o texto por linhas verticais (coordenada Y)
+                    let linhasPagina = {};
                     conteudoTextual.items.forEach(item => {
-                        let texto = item.str.trim();
-                        // Identifica padrões comuns de ruas (contendo vírgula ou números e palavras-chave)
-                        if (texto.length > 5 && (texto.toLowerCase().includes('rua') || texto.toLowerCase().includes('av') || texto.toLowerCase().includes('nossa') || texto.includes(','))) {
-                            if (!enderecosExtraidos.includes(texto)) {
-                                enderecosExtraidos.push(texto);
-                            }
-                        }
+                        let y = Math.round(item.transform[5] / 4) * 4;
+                        if (!linhasPagina[y]) linhasPagina[y] = [];
+                        linhasPagina[y].push({ x: item.transform[4], text: item.str.trim() });
+                    });
+
+                    let coordsY = Object.keys(linhasPagina).sort((a, b) => b - a);
+                    coordsY.forEach(y => {
+                        let linhaItens = linhasPagina[y].sort((a, b) => a.x - b.x);
+                        let textoCompletoLinha = linhaItens.map(i => i.text).join(" ");
+                        itensTexto.push(textoCompletoLinha);
                     });
                 }
 
-                // Fallback se a extração inteligente pegar linhas genéricas
-                if (enderecosExtraidos.length === 0) {
-                    for (let i = 1; i <= pdf.numPages; i++) {
-                        const pagina = await pdf.getPage(i);
-                        const conteudoTextual = await pagina.getTextContent();
-                        conteudoTextual.items.forEach(item => {
-                            if (item.str.trim().length > 8) {
-                                enderecosExtraidos.push(item.str.trim());
-                            }
-                        });
-                    }
-                }
-
+                enderecosExtraidos = processarEnderecosRelatorio(itensTexto);
                 renderizarTabela(enderecosExtraidos);
 
                 if (enderecosExtraidos.length > 0) {
                     document.getElementById('btnMaps').disabled = false;
                 } else {
-                    alert("Nenhum endereço válido encontrado no PDF.");
+                    alert("Não foram encontrados endereços válidos neste PDF. Verifique se é o relatório operacional padrão.");
                 }
             } catch (erro) {
                 console.error(erro);
-                alert("Erro ao ler o arquivo PDF.");
+                alert("Erro ao processar o arquivo PDF.");
             }
         };
         leitor.readAsArrayBuffer(arquivo);
+    }
+
+    function processarEnderecosRelatorio(linhas) {
+        let enderecosValidos = [];
+
+        linhas.forEach(linha => {
+            let linhaLower = linha.toLowerCase();
+            // Ignora cabeçalhos e rodapés comuns do relatório
+            if (linhaLower.includes('relatório operacional') || linhaLower.includes('data:') || linhaLower.includes('empresa') || linhaLower.includes('técnico')) {
+                return;
+            }
+
+            // Procura por padrões que contenham termos de logradouro ou vírgulas estruturadas com números
+            if (linhaLower.includes('rua') || linhaLower.includes('av') || linhaLower.includes('travessa') || linhaLower.includes('nossa') || linha.includes(',')) {
+                // Remove excessos de espaços
+                let limpo = linha.replace(/\s+/g, ' ').trim();
+                
+                // Se a linha contiver a cidade associada ou padrão de endereço com número e CEP
+                if (limpo.length > 8 && !enderecosValidos.includes(limpo)) {
+                    enderecosValidos.push(limpo);
+                }
+            }
+        });
+
+        return enderecosValidos;
     }
 
     function renderizarTabela(dados) {
@@ -227,7 +242,7 @@
         tbody.innerHTML = '';
 
         if (dados.length === 0) {
-            tbody.innerHTML = `<tr><td>Nenhum registro encontrado.</td></tr>`;
+            tbody.innerHTML = `<tr><td>Nenhum endereço encontrado.</td></tr>`;
             return;
         }
 
@@ -253,24 +268,16 @@
         }
 
         enderecosExtraidos.forEach(end => {
-            let partes = end.split(/,|\.|;/);
-            let ruaLimpa = partes[0].trim();
-            if (partes.length > 1 && !partes[1].trim().match(/^\d{8}$/)) {
-                ruaLimpa += ", " + partes[1].trim();
+            // Garante que o formato enviado para o Maps inclua Canoas-RS caso o PDF não traga explícito na linha
+            let enderecoFormatado = end;
+            if (!enderecoFormatado.toLowerCase().includes('canoas')) {
+                enderecoFormatado += ", Canoas - RS";
             }
-
-            if (ruaLimpa) {
-                pontosParaRota.push(encodeURIComponent(ruaLimpa));
-            }
+            pontosParaRota.push(encodeURIComponent(enderecoFormatado));
         });
 
-        if (pontosParaRota.length === 0) {
-            alert("Nenhum endereço válido identificado para a rota.");
-            return;
-        }
-
         if (pontosParaRota.length > 25) {
-            alert("O Google Maps aceita no máximo 25 paradas por vez. Abrindo os primeiros 25 pontos.");
+            alert("O Google Maps aceita no máximo 25 paradas por vez. O sistema abrirá os primeiros 25 pontos do relatório.");
             pontosParaRota = pontosParaRota.slice(0, 25);
         }
 
