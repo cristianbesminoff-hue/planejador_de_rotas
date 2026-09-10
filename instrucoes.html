@@ -13,7 +13,7 @@
             color: #333;
         }
         .container {
-            max-width: 600px;
+            max-width: 650px;
             margin: 0 auto;
             background: #fff;
             padding: 25px;
@@ -34,16 +34,16 @@
             font-weight: bold;
         }
 
-        h3 { font-size: 16px; color: #2d3748; margin-top: 20px; margin-bottom: 10px; }
+        h3 { font-size: 16px; color: #2b6cb0; margin-top: 25px; margin-bottom: 10px; border-bottom: 2px solid #edf2f7; padding-bottom: 5px; }
 
         ol {
             padding-left: 20px;
-            margin: 0 0 25px 0;
+            margin: 0 0 15px 0;
         }
 
         li {
             font-size: 14px;
-            margin-bottom: 12px;
+            margin-bottom: 10px;
             line-height: 1.5;
             color: #4a5568;
         }
@@ -60,6 +60,7 @@
             font-size: 15px;
             border-radius: 6px;
             box-sizing: border-box;
+            margin-top: 25px;
             transition: background-color 0.2s;
         }
 
@@ -77,13 +78,21 @@
         📖 Guia passo a passo de como utilizar as ferramentas do painel operacional.
     </div>
 
-    <h3>Como usar o Planejador de Rotas Inteligente</h3>
+    <h3>1. Extrator e Filtro de Planilhas</h3>
     <ol>
-        <li><strong>Selecione a Cidade:</strong> Na ferramenta de rotas, digite as primeiras letras ou escolha a cidade desejada no campo de seleção (ex: Canoas - RS).</li>
-        <li><strong>Defina o Ponto de Partida (Opcional):</strong> Insira sua base ou rua inicial caso queira que a rota comece a partir de um ponto fixo.</li>
+        <li><strong>Carregar o arquivo:</strong> Clique no botão de upload e selecione a planilha do relatório (formatos `.xlsx`, `.xls` ou `.csv`).</li>
+        <li><strong>Filtrar por cidade (Opcional):</strong> Digite o nome da cidade desejada (ex: Canoas ou Porto Alegre) para focar apenas nos registros daquela região.</li>
+        <li><strong>Selecionar as colunas:</strong> Marque nas caixas de seleção exatamente quais informações você quer extrair (número do protocolo, cliente, endereço, etc.).</li>
+        <li><strong>Processar e Exportar:</strong> Clique em <em>Extrair e Gerar Lista</em> e utilize o botão de impressão para salvar a listagem perfeitamente formatada em PDF (em modo paisagem).</li>
+    </ol>
+
+    <h3>2. Planejador de Rotas Inteligente</h3>
+    <ol>
+        <li><strong>Selecione a Cidade:</strong> Digite as primeiras letras ou escolha a cidade desejada no campo de seleção rápida do RS.</li>
+        <li><strong>Defina o Ponto de Partida (Opcional):</strong> Insira sua base ou endereço inicial caso queira fixar o ponto de saída da equipe.</li>
         <li><strong>Adicione os Endereços:</strong> Digite a rua e o número (ou CEP) do atendimento e clique em <em>Adicionar à Rota</em> (ou aperte Enter).</li>
-        <li><strong>Gerencie a Tabela:</strong> Você pode conferir a lista completa de paradas adicionadas e excluir itens caso tenha cometido algum erro.</li>
-        <li><strong>Abra no Google Maps:</strong> Clique no botão final para carregar automaticamente a sequência ideal de atendimento direto no seu aplicativo de rotas.</li>
+        <li><strong>Gerencie a Tabela:</strong> Confira a lista de paradas adicionadas e remova eventuais itens incorretos com facilidade.</li>
+        <li><strong>Abra no Google Maps:</strong> Clique no botão final para carregar a rota otimizada e encadeada diretamente no aplicativo de navegação.</li>
     </ol>
 
     <a href="index.html" class="btn-back">⬅️ Voltar para o Menu Principal</a>
