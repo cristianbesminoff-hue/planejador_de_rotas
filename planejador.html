@@ -158,6 +158,7 @@
 </div>
 
 <script>
+    // Configuração correta do Worker do PDF.js
     pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/2.16.105/pdf.worker.min.js';
 
     let enderecosExtraidos = [];
@@ -180,7 +181,6 @@
                     const pagina = await pdf.getPage(i);
                     const conteudoTextual = await pagina.getTextContent();
                     
-                    // Organiza o texto por linhas verticais (coordenada Y)
                     let linhasPagina = {};
                     conteudoTextual.items.forEach(item => {
                         let y = Math.round(item.transform[5] / 4) * 4;
@@ -191,7 +191,7 @@
                     let coordsY = Object.keys(linhasPagina).sort((a, b) => b - a);
                     coordsY.forEach(y => {
                         let linhaItens = linhasPagina[y].sort((a, b) => a.x - b.x);
-                        let textoCompletoLinha = linhaItens.map(i => i.text).join(" ");
+                        let textoCompletoLinha = linhaItens.map(item => item.text).join(" ");
                         itensTexto.push(textoCompletoLinha);
                     });
                 }
@@ -202,7 +202,7 @@
                 if (enderecosExtraidos.length > 0) {
                     document.getElementById('btnMaps').disabled = false;
                 } else {
-                    alert("Não foram encontrados endereços válidos neste PDF. Verifique se é o relatório operacional padrão.");
+                    alert("Não foram encontrados endereços válidos neste PDF.");
                 }
             } catch (erro) {
                 console.error(erro);
@@ -217,17 +217,13 @@
 
         linhas.forEach(linha => {
             let linhaLower = linha.toLowerCase();
-            // Ignora cabeçalhos e rodapés comuns do relatório
             if (linhaLower.includes('relatório operacional') || linhaLower.includes('data:') || linhaLower.includes('empresa') || linhaLower.includes('técnico')) {
                 return;
             }
 
-            // Procura por padrões que contenham termos de logradouro ou vírgulas estruturadas com números
+            // Procura linhas que contenham descrições de logradouro típicas do relatório
             if (linhaLower.includes('rua') || linhaLower.includes('av') || linhaLower.includes('travessa') || linhaLower.includes('nossa') || linha.includes(',')) {
-                // Remove excessos de espaços
                 let limpo = linha.replace(/\s+/g, ' ').trim();
-                
-                // Se a linha contiver a cidade associada ou padrão de endereço com número e CEP
                 if (limpo.length > 8 && !enderecosValidos.includes(limpo)) {
                     enderecosValidos.push(limpo);
                 }
@@ -268,7 +264,6 @@
         }
 
         enderecosExtraidos.forEach(end => {
-            // Garante que o formato enviado para o Maps inclua Canoas-RS caso o PDF não traga explícito na linha
             let enderecoFormatado = end;
             if (!enderecoFormatado.toLowerCase().includes('canoas')) {
                 enderecoFormatado += ", Canoas - RS";
