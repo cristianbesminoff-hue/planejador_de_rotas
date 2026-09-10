@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Gerador de Rotas via PDF</title>
+    <title>Planejador de Rotas via PDF</title>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/2.16.105/pdf.min.js"></script>
     <style>
         body {
@@ -158,7 +158,6 @@
 </div>
 
 <script>
-    // Configuração correta do Worker do PDF.js
     pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/2.16.105/pdf.worker.min.js';
 
     let enderecosExtraidos = [];
@@ -173,64 +172,71 @@
         leitor.onload = async function(e) {
             try {
                 const typedarray = new Uint8Array(e.target.result);
-                const pdf = await pdfjsLib.getDocument({ data: typedarray }).promise;
+                const loadingTask = pdfjsLib.getDocument({ data: typedarray });
+                const pdf = await loadingTask.promise;
                 
-                let itensTexto = [];
+                let linhasExtraidas = [];
 
                 for (let i = 1; i <= pdf.numPages; i++) {
                     const pagina = await pdf.getPage(i);
                     const conteudoTextual = await pagina.getTextContent();
                     
-                    let linhasPagina = {};
+                    let itensPagina = [];
                     conteudoTextual.items.forEach(item => {
-                        let y = Math.round(item.transform[5] / 4) * 4;
-                        if (!linhasPagina[y]) linhasPagina[y] = [];
-                        linhasPagina[y].push({ x: item.transform[4], text: item.str.trim() });
+                        itensPagina.push({ x: item.transform[4], y: item.transform[5], str: item.str.trim() });
                     });
 
-                    let coordsY = Object.keys(linhasPagina).sort((a, b) => b - a);
-                    coordsY.forEach(y => {
-                        let linhaItens = linhasPagina[y].sort((a, b) => a.x - b.x);
-                        let textoCompletoLinha = linhaItens.map(item => item.text).join(" ");
-                        itensTexto.push(textoCompletoLinha);
+                    // Ordena de cima para baixo (Y decrescente)
+                    itensPagina.sort((a, b) => b.y - a.y);
+
+                    let linhaAtual = "";
+                    let ultimoY = null;
+
+                    itensPagina.forEach(item => {
+                        if (ultimoY === null || Math.abs(item.y - ultimoY) > 5) {
+                            if (linhaAtual) linhasExtraidas.push(linhaAtual);
+                            linhaAtual = item.str;
+                            ultimoY = item.y;
+                        } else {
+                            linhaAtual += " " + item.str;
+                        }
                     });
+                    if (linhaAtual) linhasExtraidas.push(linhaAtual);
                 }
 
-                enderecosExtraidos = processarEnderecosRelatorio(itensTexto);
+                enderecosExtraidos = filtrarEnderecos(linhasExtraidas);
                 renderizarTabela(enderecosExtraidos);
 
                 if (enderecosExtraidos.length > 0) {
                     document.getElementById('btnMaps').disabled = false;
                 } else {
-                    alert("Não foram encontrados endereços válidos neste PDF.");
+                    alert("O PDF foi lido, mas nenhum endereço padrão foi identificado. Verifique se o formato bate com o relatório operacional.");
                 }
             } catch (erro) {
-                console.error(erro);
+                console.error("Erro interno ao ler PDF:", erro);
                 alert("Erro ao processar o arquivo PDF.");
             }
         };
         leitor.readAsArrayBuffer(arquivo);
     }
 
-    function processarEnderecosRelatorio(linhas) {
-        let enderecosValidos = [];
-
+    function filtrarEnderecos(linhas) {
+        let enderecos = [];
         linhas.forEach(linha => {
-            let linhaLower = linha.toLowerCase();
-            if (linhaLower.includes('relatório operacional') || linhaLower.includes('data:') || linhaLower.includes('empresa') || linhaLower.includes('técnico')) {
+            let lower = linha.toLowerCase();
+            // Ignora cabeçalhos
+            if (lower.includes('relatório') || lower.includes('data:') || lower.includes('empresa') || lower.includes('técnico') || lower.includes('cliente')) {
                 return;
             }
-
-            // Procura linhas que contenham descrições de logradouro típicas do relatório
-            if (linhaLower.includes('rua') || linhaLower.includes('av') || linhaLower.includes('travessa') || linhaLower.includes('nossa') || linha.includes(',')) {
+            // Procura linhas que tenham características de endereço (rua, av, ou vírgula separando número)
+            if (lower.includes('rua') || lower.includes('av') || lower.includes('travessa') || lower.includes('nossa') || lower.includes(',')) {
                 let limpo = linha.replace(/\s+/g, ' ').trim();
-                if (limpo.length > 8 && !enderecosValidos.includes(limpo)) {
-                    enderecosValidos.push(limpo);
+                if (limpo.length > 6 && !enderecos.includes(limpo)) {
+                    enderecos.push(limpo);
                 }
             }
         });
-
-        return enderecosValidos;
+        return enderecos;
     }
 
     function renderizarTabela(dados) {
