@@ -3,8 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Planejador de Rotas via CEP</title>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/2.16.105/pdf.min.js"></script>
+    <title>Planejador de Rotas Inteligente</title>
     <style>
         body {
             font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
@@ -14,7 +13,7 @@
             color: #333;
         }
         .container {
-            max-width: 100%;
+            max-width: 600px;
             margin: 0 auto;
             background: #fff;
             padding: 15px;
@@ -24,30 +23,7 @@
         }
         h2 { font-size: 18px; margin-top: 0; color: #1a365d; text-align: center; }
         
-        .upload-section {
-            background: #edf2f7;
-            padding: 12px;
-            border-radius: 6px;
-            margin-bottom: 15px;
-            border: 2px dashed #cbd5e0;
-            text-align: center;
-        }
-        input[type="file"] { display: none; }
-        .custom-file-upload {
-            display: block;
-            width: 100%;
-            padding: 12px;
-            background-color: #2b6cb0;
-            color: white;
-            border-radius: 4px;
-            font-weight: bold;
-            font-size: 15px;
-            box-sizing: border-box;
-            text-align: center;
-            cursor: pointer;
-        }
-        
-        .controls-panel {
+        .form-section {
             background: #f8fafc;
             border: 1px solid #e2e8f0;
             padding: 12px;
@@ -61,9 +37,9 @@
         
         label { font-size: 13px; font-weight: bold; color: #2d3748; display: block; margin-bottom: 4px; }
         
-        button, input[type="text"] {
+        input, select {
             width: 100%;
-            padding: 12px;
+            padding: 10px;
             font-size: 14px;
             border: 1px solid #cbd5e0;
             border-radius: 4px;
@@ -71,20 +47,37 @@
             background-color: #fff;
         }
         
-        button.btn-maps {
+        .btn-add {
+            background-color: #2b6cb0;
+            color: white;
+            border: none;
+            font-weight: bold;
+            cursor: pointer;
+            padding: 10px;
+            margin-top: 5px;
+            border-radius: 4px;
+            width: 100%;
+        }
+        .btn-add:hover { background-color: #2c5282; }
+
+        .btn-maps {
             background-color: #d97706;
             color: white;
             border: none;
             font-weight: bold;
-            margin-top: 5px;
             cursor: pointer;
+            padding: 12px;
+            margin-top: 15px;
+            border-radius: 4px;
+            width: 100%;
+            font-size: 15px;
         }
-        button.btn-maps:hover { background-color: #b45309; }
-        
+        .btn-maps:hover { background-color: #b45309; }
+        .btn-maps:disabled { background-color: #cbd5e0; cursor: not-allowed; }
+
         .table-responsive {
             width: 100%;
             overflow-x: auto;
-            -webkit-overflow-scrolling: touch;
             margin-top: 10px;
             border: 1px solid #cbd5e0;
             border-radius: 4px;
@@ -93,14 +86,12 @@
         table {
             width: 100%;
             border-collapse: collapse;
-            white-space: nowrap;
         }
         th, td {
-            padding: 10px;
+            padding: 8px 10px;
             text-align: left;
             font-size: 12px;
             border-bottom: 1px solid #cbd5e0;
-            border-right: 1px solid #cbd5e0;
         }
         th {
             background-color: #2b6cb0;
@@ -108,142 +99,164 @@
         }
         tr:nth-child(even) { background-color: #f7fafc; }
         
-        .file-name {
-            margin-top: 8px;
-            font-size: 12px;
-            color: #4a5568;
-            word-break: break-all;
+        .btn-del {
+            background-color: #e53e3e;
+            color: white;
+            border: none;
+            padding: 4px 8px;
+            border-radius: 3px;
+            cursor: pointer;
+            font-size: 11px;
         }
+        .btn-del:hover { background-color: #c53030; }
     </style>
 </head>
 <body>
 
 <div class="container">
-    <h2>Planejador de Rotas via CEP</h2>
+    <h2>Planejador de Rotas</h2>
     
-    <div class="upload-section">
-        <label for="arquivoPdf" class="custom-file-upload">
-            📂 Escolher Relatório Operacional (.pdf)
-        </label>
-        <input type="file" id="arquivoPdf" accept=".pdf" onchange="lerPDF(event)">
-        <div id="nomeArquivo" class="file-name">Nenhum arquivo selecionado</div>
+    <div class="form-section">
+        <div class="control-group">
+            <label for="cidadeSelect">Cidade:</label>
+            <input list="cidadesRS" id="cidadeSelect" placeholder="Digite para buscar a cidade (Ex: Canoas)..." value="Canoas - RS">
+            <datalist id="cidadesRS">
+                <option value="Canoas - RS">
+                <option value="Porto Alegre - RS">
+                <option value="Cachoeirinha - RS">
+                <option value="Nova Santa Rita - RS">
+                <option value="Esteio - RS">
+                <option value="Sapucaia do Sul - RS">
+                <option value="São Leopoldo - RS">
+                <option value="Novo Hamburgo - RS">
+                <option value="Alvorada - RS">
+                <option value="Gravataí - RS">
+                <option value="Viamão - RS">
+                <option value="Três Coroas - RS">
+                <option value="Gramado - RS">
+                <option value="Canela - RS">
+                <option value="Caxias do Sul - RS">
+                <option value="Pelotas - RS">
+                <option value="Santa Maria - RS">
+            </datalist>
+        </div>
+
+        <div class="control-group" style="margin-top: 10px;">
+            <label for="pontoPartida">Ponto de Partida (Opcional - Ex: Base / Rua):</label>
+            <input type="text" id="pontoPartida" placeholder="Ex: Rua Exemplo, 100">
+        </div>
+
+        <div class="control-group" style="margin-top: 10px;">
+            <label for="enderecoInput">Endereço de Atendimento (Rua e Número/CEP):</label>
+            <input type="text" id="enderecoInput" placeholder="Ex: Rua Jaguarão, 106 ou 92330-330" onkeypress="checarEnter(event)">
+        </div>
+
+        <button class="btn-add" onclick="adicionarEndereco()">➕ Adicionar à Rota</button>
     </div>
 
     <div class="controls-panel">
-        <div class="control-group">
-            <label for="pontoPartida">Ponto de Partida (Opcional - Ex: Base Canoas):</label>
-            <input type="text" id="pontoPartida" placeholder="Ex: Rua Exemplo, Canoas - RS">
-        </div>
-
-        <div class="control-group" style="margin-top: 15px;">
-            <button class="btn-maps" onclick="abrirGoogleMaps()" id="btnMaps" disabled>🗺️ Abrir Rota via CEP no Google Maps</button>
-        </div>
-    </div>
-
-    <div id="relatorio-conteudo">
-        <h3 style="font-size: 15px; margin-bottom: 5px; color: #2d3748;">CEPs Identificados para Rota</h3>
+        <h3 style="font-size: 14px; color: #2d3748; margin-bottom: 5px;">Paradas Adicionadas (<span id="contadorParadas">0</span>)</h3>
         <div class="table-responsive">
-            <table id="tabelaDados">
+            <table>
                 <thead>
                     <tr>
-                        <th>CEP Localizado / Destino</th>
+                        <th>Endereço / Destino</th>
+                        <th style="width: 60px; text-align: center;">Ação</th>
                     </tr>
                 </thead>
                 <tbody id="corpoTabela">
-                    <tr><td>Aguardando upload do relatório em PDF...</td></tr>
+                    <tr><td colspan="2" style="text-align: center; color: #718096;">Nenhum endereço adicionado ainda.</td></tr>
                 </tbody>
             </table>
         </div>
+
+        <button class="btn-maps" onclick="abrirGoogleMaps()" id="btnMaps" disabled>🗺️ Abrir Rota Completa no Google Maps</button>
     </div>
 </div>
 
 <script>
-    pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/2.16.105/pdf.worker.min.js';
+    let listaEnderecos = [];
 
-    let cepsExtraidos = [];
-
-    async function lerPDF(e) {
-        const arquivo = e.target.files[0];
-        if (!arquivo) return;
-
-        document.getElementById('nomeArquivo').innerText = "Arquivo: " + arquivo.name;
-
-        const leitor = new FileReader();
-        leitor.onload = async function(e) {
-            try {
-                const typedarray = new Uint8Array(e.target.result);
-                const pdf = await pdfjsLib.getDocument({ data: typedarray }).promise;
-                
-                let textoCompleto = "";
-
-                for (let i = 1; i <= pdf.numPages; i++) {
-                    const pagina = await pdf.getPage(i);
-                    const conteudoTextual = await pagina.getTextContent();
-                    conteudoTextual.items.forEach(item => {
-                        textoCompleto += " " + item.str;
-                    });
-                }
-
-                // Expressão regular para capturar CEPs brasileiros (8 dígitos seguidos, com ou sem hífen)
-                const regexCep = /\b\d{5}-?\d{3}\b/g;
-                let encontrados = textoCompleto.match(regexCep);
-
-                if (encontrados) {
-                    // Remove duplicados
-                    cepsExtraidos = [...new Set(encontrados)];
-                } else {
-                    cepsExtraidos = [];
-                }
-
-                renderizarTabela(cepsExtraidos);
-
-                if (cepsExtraidos.length > 0) {
-                    document.getElementById('btnMaps').disabled = false;
-                } else {
-                    alert("Nenhum CEP válido foi encontrado neste PDF.");
-                }
-            } catch (erro) {
-                console.error("Erro:", erro);
-                alert("Erro ao processar o arquivo PDF.");
-            }
-        };
-        leitor.readAsArrayBuffer(arquivo);
+    function checarEnter(e) {
+        if (e.key === 'Enter') {
+            adicionarEndereco();
+        }
     }
 
-    function renderizarTabela(dados) {
-        const tbody = document.getElementById('corpoTabela');
-        tbody.innerHTML = '';
+    function adicionarEndereco() {
+        const ruaInput = document.getElementById('enderecoInput');
+        const cidadeInput = document.getElementById('cidadeSelect');
+        
+        let rua = ruaInput.value.trim();
+        let cidade = cidadeInput.value.trim();
 
-        if (dados.length === 0) {
-            tbody.innerHTML = `<tr><td>Nenhum CEP encontrado.</td></tr>`;
+        if (!rua) {
+            alert("Digite o endereço ou CEP.");
             return;
         }
 
-        dados.forEach(cep => {
+        if (!cidade) {
+            cidade = "Canoas - RS";
+        }
+
+        let enderecoCompleto = `${rua}, ${cidade}`;
+        listaEnderecos.push(enderecoCompleto);
+
+        ruaInput.value = '';
+        ruaInput.focus();
+
+        atualizarTabela();
+    }
+
+    function removerEndereco(index) {
+        listaEnderecos.splice(index, 1);
+        atualizarTabela();
+    }
+
+    function atualizarTabela() {
+        const tbody = document.getElementById('corpoTabela');
+        const contador = document.getElementById('contadorParadas');
+        const btnMaps = document.getElementById('btnMaps');
+
+        tbody.innerHTML = '';
+        contador.innerText = listaEnderecos.length;
+
+        if (listaEnderecos.length === 0) {
+            tbody.innerHTML = `<tr><td colspan="2" style="text-align: center; color: #718096;">Nenhum endereço adicionado ainda.</td></tr>`;
+            btnMaps.disabled = true;
+            return;
+        }
+
+        listaEnderecos.forEach((end, index) => {
             let tr = document.createElement('tr');
-            tr.innerHTML = `<td>CEP: ${cep}</td>`;
+            tr.innerHTML = `
+                <td>${end}</td>
+                <td style="text-align: center;"><button class="btn-del" onclick="removerEndereco(${index})">Excluir</button></td>
+            `;
             tbody.appendChild(tr);
         });
+
+        btnMaps.disabled = false;
     }
 
     function abrirGoogleMaps() {
         const pontoPartida = document.getElementById('pontoPartida').value.trim();
+        const cidadePadrao = document.getElementById('cidadeSelect').value.trim();
 
-        if (cepsExtraidos.length === 0) {
-            alert("Nenhum CEP disponível para gerar a rota.");
+        if (listaEnderecos.length === 0) {
+            alert("Adicione pelo menos um endereço.");
             return;
         }
 
         let pontosParaRota = [];
 
         if (pontoPartida) {
-            pontosParaRota.push(encodeURIComponent(pontoPartida));
+            let partidaCompleta = pontoPartida.toLowerCase().includes('rs') ? pontoPartida : `${pontoPartida}, ${cidadePadrao}`;
+            pontosParaRota.push(encodeURIComponent(partidaCompleta));
         }
 
-        cepsExtraidos.forEach(cep => {
-            // O Google Maps aceita perfeitamente buscas diretas baseadas em CEP combinadas com a cidade
-            let queryCep = `CEP ${cep}, Canoas - RS`;
-            pontosParaRota.push(encodeURIComponent(queryCep));
+        listaEnderecos.forEach(end => {
+            pontosParaRota.push(encodeURIComponent(end));
         });
 
         if (pontosParaRota.length > 25) {
