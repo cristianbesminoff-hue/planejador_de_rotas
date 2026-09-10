@@ -3,8 +3,8 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Extrator de Dados de Planilha</title>
-    <!-- Biblioteca SheetJS para leitura de arquivos Excel no navegador -->
+    <title>Extrator e Filtro de Planilha</title>
+    <!-- Biblioteca SheetJS para leitura de Excel -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
     <style>
         body {
@@ -15,7 +15,7 @@
             color: #333;
         }
         .container {
-            max-width: 800px;
+            max-width: 850px;
             margin: 0 auto;
             background: #fff;
             padding: 20px;
@@ -25,11 +25,35 @@
         }
         h2 { font-size: 18px; margin-top: 0; color: #1a365d; text-align: center; }
         
-        .upload-section {
-            background: #edf2f7;
+        .form-section {
+            background: #f8fafc;
+            border: 1px solid #e2e8f0;
             padding: 15px;
             border-radius: 6px;
             margin-bottom: 15px;
+        }
+        .control-group {
+            margin-bottom: 12px;
+        }
+        .control-group:last-child { margin-bottom: 0; }
+        
+        label { font-size: 13px; font-weight: bold; color: #2d3748; display: block; margin-bottom: 4px; }
+        
+        input, select {
+            width: 100%;
+            padding: 10px;
+            font-size: 14px;
+            border: 1px solid #cbd5e0;
+            border-radius: 4px;
+            box-sizing: border-box;
+            background-color: #fff;
+        }
+
+        .upload-section {
+            background: #edf2f7;
+            padding: 12px;
+            border-radius: 6px;
+            margin-top: 10px;
             border: 2px dashed #cbd5e0;
             text-align: center;
         }
@@ -37,20 +61,18 @@
         .custom-file-upload {
             display: block;
             width: 100%;
-            padding: 12px;
+            padding: 10px;
             background-color: #2b6cb0;
             color: white;
             border-radius: 4px;
             font-weight: bold;
-            font-size: 15px;
-            box-sizing: border-box;
-            text-align: center;
+            font-size: 14px;
             cursor: pointer;
         }
         .custom-file-upload:hover { background-color: #2c5282; }
 
         .file-name {
-            margin-top: 8px;
+            margin-top: 6px;
             font-size: 12px;
             color: #4a5568;
             word-break: break-all;
@@ -71,7 +93,7 @@
             white-space: nowrap;
         }
         th, td {
-            padding: 10px;
+            padding: 9px 10px;
             text-align: left;
             font-size: 12px;
             border-bottom: 1px solid #cbd5e0;
@@ -86,6 +108,20 @@
         }
         tr:nth-child(even) { background-color: #f7fafc; }
 
+        .btn-action {
+            background-color: #319795;
+            color: white;
+            border: none;
+            font-weight: bold;
+            cursor: pointer;
+            padding: 12px;
+            margin-top: 15px;
+            border-radius: 4px;
+            width: 100%;
+            font-size: 14px;
+        }
+        .btn-action:hover { background-color: #2c7a7b; }
+
         .btn-back {
             display: block;
             width: 100%;
@@ -98,7 +134,7 @@
             font-size: 14px;
             border-radius: 6px;
             box-sizing: border-box;
-            margin-top: 20px;
+            margin-top: 15px;
         }
         .btn-back:hover { background-color: #2d3748; }
     </style>
@@ -106,27 +142,50 @@
 <body>
 
 <div class="container">
-    <h2>Extrator de Dados de Planilha (Excel)</h2>
+    <h2>Extrator e Filtro de Planilha</h2>
     
-    <div class="upload-section">
-        <label for="arquivoExcel" class="custom-file-upload">
-            📊 Escolher Planilha Excel (.xlsx, .xls)
-        </label>
-        <input type="file" id="arquivoExcel" accept=".xlsx, .xls, .csv" onchange="lerExcel(event)">
-        <div id="nomeArquivo" class="file-name">Nenhum arquivo selecionado</div>
+    <div class="form-section">
+        <div class="control-group">
+            <label for="cidadeFiltro">Filtrar por Cidade (Opcional):</label>
+            <input list="cidadesRS" id="cidadeFiltro" placeholder="Ex: Canoas (Deixe em branco para todas)...">
+            <datalist id="cidadesRS">
+                <option value="Canoas">
+                <option value="Porto Alegre">
+                <option value="Cachoeirinha">
+                <option value="Nova Santa Rita">
+                <option value="Esteio">
+                <option value="Sapucaia do Sul">
+                <option value="São Leopoldo">
+                <option value="Novo Hamburgo">
+                <option value="Alvorada">
+                <option value="Gravataí">
+                <option value="Viamão">
+            </datalist>
+        </div>
+
+        <div class="control-group" style="margin-top: 12px;">
+            <label>Carregar Planilha do Relatório:</label>
+            <div class="upload-section">
+                <label for="arquivoExcel" class="custom-file-upload">
+                    📊 Escolher Arquivo Excel (.xlsx, .xls, .csv)
+                </label>
+                <input type="file" id="arquivoExcel" accept=".xlsx, .xls, .csv" onchange="carregarArquivo(event)">
+                <div id="nomeArquivo" class="file-name">Nenhum arquivo selecionado</div>
+            </div>
+        </div>
+
+        <button class="btn-action" onclick="processarFiltro()" id="btnProcessar" disabled>⚙️ Filtrar e Organizar Dados</button>
     </div>
 
     <div id="relatorio-conteudo">
-        <h3 style="font-size: 15px; margin-bottom: 5px; color: #2d3748;">Dados Extraídos da Planilha</h3>
+        <h3 style="font-size: 14px; margin-bottom: 5px; color: #2d3748;">Dados Filtrados (<span id="contadorLinhas">0</span> registros)</h3>
         <div class="table-responsive">
             <table id="tabelaDados">
                 <thead id="cabecalhoTabela">
-                    <tr>
-                        <th>Aguardando upload...</th>
-                    </tr>
+                    <tr><th>Aguardando planilha...</th></tr>
                 </thead>
                 <tbody id="corpoTabela">
-                    <tr><td>Selecione um arquivo Excel para visualizar os dados formatados.</td></tr>
+                    <tr><td>Selecione um arquivo e clique em filtrar.</td></tr>
                 </tbody>
             </table>
         </div>
@@ -136,7 +195,10 @@
 </div>
 
 <script>
-    function lerExcel(e) {
+    let dadosBrutos = [];
+    let cabecalhosGlobais = [];
+
+    function carregarArquivo(e) {
         const arquivo = e.target.files[0];
         if (!arquivo) return;
 
@@ -147,61 +209,78 @@
             try {
                 const dadosBinarios = new Uint8Array(e.target.result);
                 const workbook = XLSX.read(dadosBinarios, { type: 'array' });
+                const primeiraAba = workbook.SheetNames[0];
+                const aba = workbook.Sheets[primeiraAba];
 
-                // Pega a primeira aba da planilha
-                const primeiraAbaNome = workbook.SheetNames[0];
-                const aba = workbook.Sheets[primeiraAbaNome];
-
-                // Converte a aba em uma matriz de linhas/colunas
-                const dadosJson = XLSX.utils.sheet_to_json(aba, { header: 1 });
-
-                renderizarTabela(dadosJson);
+                const json = XLSX.utils.sheet_to_json(aba, { header: 1 });
+                if (json.length > 0) {
+                    cabecalhosGlobais = json[0];
+                    dadosBrutos = json.slice(1);
+                    document.getElementById('btnProcessar').disabled = false;
+                    alert("Planilha carregada com sucesso! Clique em 'Filtrar e Organizar Dados'.");
+                }
             } catch (erro) {
-                console.error("Erro ao ler Excel:", erro);
-                alert("Erro ao processar o arquivo Excel. Verifique se o formato é válido.");
+                console.error(erro);
+                alert("Erro ao ler o arquivo.");
             }
         };
         leitor.readAsArrayBuffer(arquivo);
     }
 
-    function renderizarTabela(linhas) {
+    function processarFiltro() {
+        if (dadosBrutos.length === 0) return;
+
+        const cidadeBusca = document.getElementById('cidadeFiltro').value.trim().toLowerCase();
+        
+        // Filtra as linhas com base na cidade digitada (se preenchida)
+        let dadosFiltrados = dadosBrutos.filter(linha => {
+            if (!cidadeBusca) return true;
+            // Varre as colunas da linha procurando pelo texto da cidade
+            return linha.some(celula => celula && celula.toString().toLowerCase().includes(cidadeBusca));
+        });
+
+        renderizarTabela(cabecalhosGlobais, dadosFiltrados);
+    }
+
+    function renderizarTabela(cabecalhos, linhas) {
         const thead = document.getElementById('cabecalhoTabela');
         const tbody = document.getElementById('corpoTabela');
+        const contador = document.getElementById('contadorLinhas');
 
         thead.innerHTML = '';
         tbody.innerHTML = '';
+        contador.innerText = linhas.length;
 
-        if (!linhas || linhas.length === 0) {
-            tbody.innerHTML = `<tr><td>A planilha está vazia.</td></tr>`;
+        if (linhas.length === 0) {
+            tbody.innerHTML = `<tr><td>Nenhum registro encontrado para este filtro.</td></tr>`;
             return;
         }
 
-        // Primeira linha como cabeçalho
-        let cabecalhoHtml = '<tr>';
-        linhas[0].forEach(coluna => {
-            cabecalhoHtml += `<th>${coluna !== undefined ? coluna : ''}</th>`;
+        // Monta cabeçalho
+        let trHead = '<tr>';
+        cabecalhos.forEach(col => {
+            trHead += `<th>${col !== undefined ? col : ''}</th>`;
         });
-        cabecalhoHtml += '</tr>';
-        thead.innerHTML = cabecalhoHtml;
+        trHead += '</tr>';
+        thead.innerHTML = trHead;
 
-        // Demais linhas como dados
-        for (let i = 1; i < linhas.length; i++) {
+        // Monta linhas
+        linhas.forEach(linha => {
             let tr = document.createElement('tr');
-            let linhaVazia = true;
-
             let linhaHtml = '';
-            linhas[i].forEach(celula => {
-                let valor = celula !== undefined ? celula : '';
-                if (valor !== '') linhaVazia = false;
+            let vazia = true;
+
+            cabecalhos.forEach((_, index) => {
+                let valor = linha[index] !== undefined ? linha[index] : '';
+                if (valor !== '') vazia = false;
                 linhaHtml += `<td>${valor}</td>`;
             });
 
-            // Só adiciona a linha se ela não estiver totalmente em branco
-            if (!linhaVazia) {
+            if (!vazia) {
                 tr.innerHTML = linhaHtml;
                 tbody.appendChild(tr);
             }
-        }
+        });
     }
 </script>
 
