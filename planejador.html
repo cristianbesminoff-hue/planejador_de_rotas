@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Planejador de Rotas via PDF</title>
+    <title>Planejador de Rotas via CEP</title>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/2.16.105/pdf.min.js"></script>
     <style>
         body {
@@ -119,7 +119,7 @@
 <body>
 
 <div class="container">
-    <h2>Planejador de Rotas via PDF</h2>
+    <h2>Planejador de Rotas via CEP</h2>
     
     <div class="upload-section">
         <label for="arquivoPdf" class="custom-file-upload">
@@ -136,17 +136,17 @@
         </div>
 
         <div class="control-group" style="margin-top: 15px;">
-            <button class="btn-maps" onclick="abrirGoogleMaps()" id="btnMaps" disabled>🗺️ Abrir Rota Completa no Google Maps</button>
+            <button class="btn-maps" onclick="abrirGoogleMaps()" id="btnMaps" disabled>🗺️ Abrir Rota via CEP no Google Maps</button>
         </div>
     </div>
 
     <div id="relatorio-conteudo">
-        <h3 style="font-size: 15px; margin-bottom: 5px; color: #2d3748;">Endereços Identificados para a Rota</h3>
+        <h3 style="font-size: 15px; margin-bottom: 5px; color: #2d3748;">CEPs Identificados para Rota</h3>
         <div class="table-responsive">
             <table id="tabelaDados">
                 <thead>
                     <tr>
-                        <th>Endereço Formatado</th>
+                        <th>CEP Localizado / Destino</th>
                     </tr>
                 </thead>
                 <tbody id="corpoTabela">
@@ -160,7 +160,7 @@
 <script>
     pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/2.16.105/pdf.worker.min.js';
 
-    let enderecosExtraidos = [];
+    let cepsExtraidos = [];
 
     async function lerPDF(e) {
         const arquivo = e.target.files[0];
@@ -172,71 +172,42 @@
         leitor.onload = async function(e) {
             try {
                 const typedarray = new Uint8Array(e.target.result);
-                const loadingTask = pdfjsLib.getDocument({ data: typedarray });
-                const pdf = await loadingTask.promise;
+                const pdf = await pdfjsLib.getDocument({ data: typedarray }).promise;
                 
-                let linhasExtraidas = [];
+                let textoCompleto = "";
 
                 for (let i = 1; i <= pdf.numPages; i++) {
                     const pagina = await pdf.getPage(i);
                     const conteudoTextual = await pagina.getTextContent();
-                    
-                    let itensPagina = [];
                     conteudoTextual.items.forEach(item => {
-                        itensPagina.push({ x: item.transform[4], y: item.transform[5], str: item.str.trim() });
+                        textoCompleto += " " + item.str;
                     });
-
-                    // Ordena de cima para baixo (Y decrescente)
-                    itensPagina.sort((a, b) => b.y - a.y);
-
-                    let linhaAtual = "";
-                    let ultimoY = null;
-
-                    itensPagina.forEach(item => {
-                        if (ultimoY === null || Math.abs(item.y - ultimoY) > 5) {
-                            if (linhaAtual) linhasExtraidas.push(linhaAtual);
-                            linhaAtual = item.str;
-                            ultimoY = item.y;
-                        } else {
-                            linhaAtual += " " + item.str;
-                        }
-                    });
-                    if (linhaAtual) linhasExtraidas.push(linhaAtual);
                 }
 
-                enderecosExtraidos = filtrarEnderecos(linhasExtraidas);
-                renderizarTabela(enderecosExtraidos);
+                // Expressão regular para capturar CEPs brasileiros (8 dígitos seguidos, com ou sem hífen)
+                const regexCep = /\b\d{5}-?\d{3}\b/g;
+                let encontrados = textoCompleto.match(regexCep);
 
-                if (enderecosExtraidos.length > 0) {
+                if (encontrados) {
+                    // Remove duplicados
+                    cepsExtraidos = [...new Set(encontrados)];
+                } else {
+                    cepsExtraidos = [];
+                }
+
+                renderizarTabela(cepsExtraidos);
+
+                if (cepsExtraidos.length > 0) {
                     document.getElementById('btnMaps').disabled = false;
                 } else {
-                    alert("O PDF foi lido, mas nenhum endereço padrão foi identificado. Verifique se o formato bate com o relatório operacional.");
+                    alert("Nenhum CEP válido foi encontrado neste PDF.");
                 }
             } catch (erro) {
-                console.error("Erro interno ao ler PDF:", erro);
+                console.error("Erro:", erro);
                 alert("Erro ao processar o arquivo PDF.");
             }
         };
         leitor.readAsArrayBuffer(arquivo);
-    }
-
-    function filtrarEnderecos(linhas) {
-        let enderecos = [];
-        linhas.forEach(linha => {
-            let lower = linha.toLowerCase();
-            // Ignora cabeçalhos
-            if (lower.includes('relatório') || lower.includes('data:') || lower.includes('empresa') || lower.includes('técnico') || lower.includes('cliente')) {
-                return;
-            }
-            // Procura linhas que tenham características de endereço (rua, av, ou vírgula separando número)
-            if (lower.includes('rua') || lower.includes('av') || lower.includes('travessa') || lower.includes('nossa') || lower.includes(',')) {
-                let limpo = linha.replace(/\s+/g, ' ').trim();
-                if (limpo.length > 6 && !enderecos.includes(limpo)) {
-                    enderecos.push(limpo);
-                }
-            }
-        });
-        return enderecos;
     }
 
     function renderizarTabela(dados) {
@@ -244,13 +215,13 @@
         tbody.innerHTML = '';
 
         if (dados.length === 0) {
-            tbody.innerHTML = `<tr><td>Nenhum endereço encontrado.</td></tr>`;
+            tbody.innerHTML = `<tr><td>Nenhum CEP encontrado.</td></tr>`;
             return;
         }
 
-        dados.forEach(texto => {
+        dados.forEach(cep => {
             let tr = document.createElement('tr');
-            tr.innerHTML = `<td>${texto}</td>`;
+            tr.innerHTML = `<td>CEP: ${cep}</td>`;
             tbody.appendChild(tr);
         });
     }
@@ -258,8 +229,8 @@
     function abrirGoogleMaps() {
         const pontoPartida = document.getElementById('pontoPartida').value.trim();
 
-        if (enderecosExtraidos.length === 0) {
-            alert("Nenhum endereço disponível para gerar a rota.");
+        if (cepsExtraidos.length === 0) {
+            alert("Nenhum CEP disponível para gerar a rota.");
             return;
         }
 
@@ -269,16 +240,14 @@
             pontosParaRota.push(encodeURIComponent(pontoPartida));
         }
 
-        enderecosExtraidos.forEach(end => {
-            let enderecoFormatado = end;
-            if (!enderecoFormatado.toLowerCase().includes('canoas')) {
-                enderecoFormatado += ", Canoas - RS";
-            }
-            pontosParaRota.push(encodeURIComponent(enderecoFormatado));
+        cepsExtraidos.forEach(cep => {
+            // O Google Maps aceita perfeitamente buscas diretas baseadas em CEP combinadas com a cidade
+            let queryCep = `CEP ${cep}, Canoas - RS`;
+            pontosParaRota.push(encodeURIComponent(queryCep));
         });
 
         if (pontosParaRota.length > 25) {
-            alert("O Google Maps aceita no máximo 25 paradas por vez. O sistema abrirá os primeiros 25 pontos do relatório.");
+            alert("O Google Maps aceita no máximo 25 paradas por vez. O sistema abrirá os primeiros 25 pontos.");
             pontosParaRota = pontosParaRota.slice(0, 25);
         }
 
