@@ -15,7 +15,7 @@
             color: #333;
         }
         .container {
-            max-width: 850px;
+            max-width: 900px;
             margin: 0 auto;
             background: #fff;
             padding: 20px;
@@ -77,7 +77,6 @@
             word-break: break-all;
         }
 
-        /* Área de seleção de colunas dinamicas */
         .checkbox-container {
             display: grid;
             grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
@@ -112,14 +111,17 @@
         table {
             width: 100%;
             border-collapse: collapse;
-            white-space: nowrap;
+            table-layout: fixed; /* Força a tabela a respeitar os limites */
         }
         th, td {
-            padding: 9px 10px;
+            padding: 8px 10px;
             text-align: left;
-            font-size: 12px;
+            font-size: 11px;
             border-bottom: 1px solid #cbd5e0;
             border-right: 1px solid #cbd5e0;
+            word-wrap: break-word; /* Quebra palavras longas para não vazar */
+            overflow-wrap: break-word;
+            white-space: normal; /* Permite quebra de linha interna */
         }
         th {
             background-color: #2b6cb0;
@@ -175,12 +177,18 @@
         }
         .btn-back:hover { background-color: #2d3748; }
 
+        /* Configuração estrita para Impressão e PDF (Modo Paisagem) */
         @media print {
-            body { background-color: #fff; padding: 0; }
-            .container { box-shadow: none; padding: 0; max-width: 100%; }
-            .form-section, .btn-action, .btn-print, .btn-back { display: none; }
-            .table-responsive { max-height: none; border: none; }
-            table { width: 100%; }
+            @page {
+                size: landscape;
+                margin: 10mm;
+            }
+            body { background-color: #fff; padding: 0; font-size: 10px; }
+            .container { box-shadow: none; padding: 0; max-width: 100%; width: 100%; }
+            .form-section, .btn-action, .btn-print, .btn-back { display: none !important; }
+            .table-responsive { max-height: none; border: none; overflow: visible; }
+            table { width: 100%; table-layout: fixed; }
+            th, td { padding: 6px; font-size: 10px; border: 1px solid #000; }
         }
     </style>
 </head>
@@ -300,7 +308,6 @@
     function processarExtracao() {
         if (dadosBrutos.length === 0) return;
 
-        // Pega os índices das colunas marcadas
         const checkboxes = document.querySelectorAll('#seletorColunas input[type="checkbox"]:checked');
         let indicesSelecionados = Array.from(checkboxes).map(cb => parseInt(cb.value));
 
@@ -311,7 +318,6 @@
 
         const cidadeBusca = document.getElementById('cidadeFiltro').value.trim().toLowerCase();
 
-        // Filtra por cidade se preenchido
         let dadosFiltrados = dadosBrutos.filter(linha => {
             if (!cidadeBusca) return true;
             return linha.some(celula => celula && celula.toString().toLowerCase().includes(cidadeBusca));
@@ -336,7 +342,6 @@
             return;
         }
 
-        // Monta cabeçalho apenas com as colunas escolhidas
         let trHead = '<tr>';
         indices.forEach(idx => {
             let nomeColuna = cabecalhosGlobais[idx] || `Coluna ${idx}`;
@@ -345,7 +350,6 @@
         trHead += '</tr>';
         thead.innerHTML = trHead;
 
-        // Monta as linhas correspondentes
         linhas.forEach(linha => {
             let tr = document.createElement('tr');
             let linhaHtml = '';
