@@ -3,9 +3,9 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Gerador de Rotas via PDF</title>
-    <!-- Biblioteca PDF.js otimizada para carregar sem conflitos locais -->
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/2.16.105/pdf.min.js"></script>
+    <title>Extrator de Dados de Planilha</title>
+    <!-- Biblioteca SheetJS para leitura de arquivos Excel no navegador -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
     <style>
         body {
             font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
@@ -15,10 +15,10 @@
             color: #333;
         }
         .container {
-            max-width: 100%;
+            max-width: 800px;
             margin: 0 auto;
             background: #fff;
-            padding: 15px;
+            padding: 20px;
             border-radius: 8px;
             box-shadow: 0 2px 5px rgba(0,0,0,0.1);
             box-sizing: border-box;
@@ -27,7 +27,7 @@
         
         .upload-section {
             background: #edf2f7;
-            padding: 12px;
+            padding: 15px;
             border-radius: 6px;
             margin-bottom: 15px;
             border: 2px dashed #cbd5e0;
@@ -47,48 +47,22 @@
             text-align: center;
             cursor: pointer;
         }
-        
-        .controls-panel {
-            background: #f8fafc;
-            border: 1px solid #e2e8f0;
-            padding: 12px;
-            border-radius: 6px;
-            margin-bottom: 15px;
+        .custom-file-upload:hover { background-color: #2c5282; }
+
+        .file-name {
+            margin-top: 8px;
+            font-size: 12px;
+            color: #4a5568;
+            word-break: break-all;
         }
-        .control-group {
-            margin-bottom: 12px;
-        }
-        .control-group:last-child { margin-bottom: 0; }
-        
-        label { font-size: 13px; font-weight: bold; color: #2d3748; display: block; margin-bottom: 4px; }
-        
-        button, input[type="text"] {
-            width: 100%;
-            padding: 12px;
-            font-size: 14px;
-            border: 1px solid #cbd5e0;
-            border-radius: 4px;
-            box-sizing: border-box;
-            background-color: #fff;
-        }
-        
-        button.btn-maps {
-            background-color: #d97706;
-            color: white;
-            border: none;
-            font-weight: bold;
-            margin-top: 5px;
-            cursor: pointer;
-        }
-        button.btn-maps:hover { background-color: #b45309; }
-        
+
         .table-responsive {
             width: 100%;
             overflow-x: auto;
-            -webkit-overflow-scrolling: touch;
-            margin-top: 10px;
+            margin-top: 15px;
             border: 1px solid #cbd5e0;
             border-radius: 4px;
+            max-height: 400px;
         }
 
         table {
@@ -106,176 +80,128 @@
         th {
             background-color: #2b6cb0;
             color: white;
+            position: sticky;
+            top: 0;
+            z-index: 10;
         }
         tr:nth-child(even) { background-color: #f7fafc; }
-        
-        .file-name {
-            margin-top: 8px;
-            font-size: 12px;
-            color: #4a5568;
-            word-break: break-all;
+
+        .btn-back {
+            display: block;
+            width: 100%;
+            padding: 12px;
+            background-color: #4a5568;
+            color: white;
+            text-align: center;
+            text-decoration: none;
+            font-weight: bold;
+            font-size: 14px;
+            border-radius: 6px;
+            box-sizing: border-box;
+            margin-top: 20px;
         }
+        .btn-back:hover { background-color: #2d3748; }
     </style>
 </head>
 <body>
 
 <div class="container">
-    <h2>Gerador de Rotas via PDF</h2>
+    <h2>Extrator de Dados de Planilha (Excel)</h2>
     
     <div class="upload-section">
-        <label for="arquivoPdf" class="custom-file-upload">
-            📂 Escolher Relatório em PDF (.pdf)
+        <label for="arquivoExcel" class="custom-file-upload">
+            📊 Escolher Planilha Excel (.xlsx, .xls)
         </label>
-        <input type="file" id="arquivoPdf" accept=".pdf" onchange="lerPDF(event)">
+        <input type="file" id="arquivoExcel" accept=".xlsx, .xls, .csv" onchange="lerExcel(event)">
         <div id="nomeArquivo" class="file-name">Nenhum arquivo selecionado</div>
     </div>
 
-    <div class="controls-panel">
-        <div class="control-group">
-            <label for="pontoPartida">Ponto de Partida (Opcional - Ex: Base Canoas):</label>
-            <input type="text" id="pontoPartida" placeholder="Ex: Rua Exemplo, Canoas">
-        </div>
-
-        <div class="control-group" style="margin-top: 15px;">
-            <button class="btn-maps" onclick="abrirGoogleMaps()" id="btnMaps" disabled>🗺️ Abrir Rota do PDF no Google Maps</button>
-        </div>
-    </div>
-
     <div id="relatorio-conteudo">
-        <h3 style="font-size: 15px; margin-bottom: 5px; color: #2d3748;">Endereços Extraídos do PDF</h3>
+        <h3 style="font-size: 15px; margin-bottom: 5px; color: #2d3748;">Dados Extraídos da Planilha</h3>
         <div class="table-responsive">
             <table id="tabelaDados">
-                <thead>
+                <thead id="cabecalhoTabela">
                     <tr>
-                        <th>Endereços Identificados</th>
+                        <th>Aguardando upload...</th>
                     </tr>
                 </thead>
                 <tbody id="corpoTabela">
-                    <tr><td>Aguardando upload de arquivo PDF...</td></tr>
+                    <tr><td>Selecione um arquivo Excel para visualizar os dados formatados.</td></tr>
                 </tbody>
             </table>
         </div>
     </div>
+
+    <a href="index.html" class="btn-back">⬅️ Voltar para o Menu Principal</a>
 </div>
 
 <script>
-    // Configuração do Worker local seguro
-    pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/2.16.105/pdf.worker.min.js';
-
-    let enderecosExtraidos = [];
-
-    async function lerPDF(e) {
+    function lerExcel(e) {
         const arquivo = e.target.files[0];
         if (!arquivo) return;
 
         document.getElementById('nomeArquivo').innerText = "Arquivo: " + arquivo.name;
 
         const leitor = new FileReader();
-        leitor.onload = async function(e) {
+        leitor.onload = function(e) {
             try {
-                const typedarray = new Uint8Array(e.target.result);
-                const loadingTask = pdfjsLib.getDocument({ data: typedarray });
-                const pdf = await loadingTask.promise;
-                
-                enderecosExtraidos = [];
+                const dadosBinarios = new Uint8Array(e.target.result);
+                const workbook = XLSX.read(dadosBinarios, { type: 'array' });
 
-                for (let i = 1; i <= pdf.numPages; i++) {
-                    const pagina = await pdf.getPage(i);
-                    const conteudoTextual = await pagina.getTextContent();
-                    
-                    conteudoTextual.items.forEach(item => {
-                        let texto = item.str.trim();
-                        // Identifica padrões comuns de ruas (contendo vírgula ou números e palavras-chave)
-                        if (texto.length > 5 && (texto.toLowerCase().includes('rua') || texto.toLowerCase().includes('av') || texto.toLowerCase().includes('nossa') || texto.includes(','))) {
-                            if (!enderecosExtraidos.includes(texto)) {
-                                enderecosExtraidos.push(texto);
-                            }
-                        }
-                    });
-                }
+                // Pega a primeira aba da planilha
+                const primeiraAbaNome = workbook.SheetNames[0];
+                const aba = workbook.Sheets[primeiraAbaNome];
 
-                // Fallback se a extração inteligente pegar linhas genéricas
-                if (enderecosExtraidos.length === 0) {
-                    for (let i = 1; i <= pdf.numPages; i++) {
-                        const pagina = await pdf.getPage(i);
-                        const conteudoTextual = await pagina.getTextContent();
-                        conteudoTextual.items.forEach(item => {
-                            if (item.str.trim().length > 8) {
-                                enderecosExtraidos.push(item.str.trim());
-                            }
-                        });
-                    }
-                }
+                // Converte a aba em uma matriz de linhas/colunas
+                const dadosJson = XLSX.utils.sheet_to_json(aba, { header: 1 });
 
-                renderizarTabela(enderecosExtraidos);
-
-                if (enderecosExtraidos.length > 0) {
-                    document.getElementById('btnMaps').disabled = false;
-                } else {
-                    alert("Nenhum endereço válido encontrado no PDF.");
-                }
+                renderizarTabela(dadosJson);
             } catch (erro) {
-                console.error(erro);
-                alert("Erro ao ler o arquivo PDF.");
+                console.error("Erro ao ler Excel:", erro);
+                alert("Erro ao processar o arquivo Excel. Verifique se o formato é válido.");
             }
         };
         leitor.readAsArrayBuffer(arquivo);
     }
 
-    function renderizarTabela(dados) {
+    function renderizarTabela(linhas) {
+        const thead = document.getElementById('cabecalhoTabela');
         const tbody = document.getElementById('corpoTabela');
+
+        thead.innerHTML = '';
         tbody.innerHTML = '';
 
-        if (dados.length === 0) {
-            tbody.innerHTML = `<tr><td>Nenhum registro encontrado.</td></tr>`;
+        if (!linhas || linhas.length === 0) {
+            tbody.innerHTML = `<tr><td>A planilha está vazia.</td></tr>`;
             return;
         }
 
-        dados.forEach(texto => {
+        // Primeira linha como cabeçalho
+        let cabecalhoHtml = '<tr>';
+        linhas[0].forEach(coluna => {
+            cabecalhoHtml += `<th>${coluna !== undefined ? coluna : ''}</th>`;
+        });
+        cabecalhoHtml += '</tr>';
+        thead.innerHTML = cabecalhoHtml;
+
+        // Demais linhas como dados
+        for (let i = 1; i < linhas.length; i++) {
             let tr = document.createElement('tr');
-            tr.innerHTML = `<td>${texto}</td>`;
-            tbody.appendChild(tr);
-        });
-    }
+            let linhaVazia = true;
 
-    function abrirGoogleMaps() {
-        const pontoPartida = document.getElementById('pontoPartida').value.trim();
+            let linhaHtml = '';
+            linhas[i].forEach(celula => {
+                let valor = celula !== undefined ? celula : '';
+                if (valor !== '') linhaVazia = false;
+                linhaHtml += `<td>${valor}</td>`;
+            });
 
-        if (enderecosExtraidos.length === 0) {
-            alert("Nenhum endereço disponível para gerar a rota.");
-            return;
-        }
-
-        let pontosParaRota = [];
-
-        if (pontoPartida) {
-            pontosParaRota.push(encodeURIComponent(pontoPartida));
-        }
-
-        enderecosExtraidos.forEach(end => {
-            let partes = end.split(/,|\.|;/);
-            let ruaLimpa = partes[0].trim();
-            if (partes.length > 1 && !partes[1].trim().match(/^\d{8}$/)) {
-                ruaLimpa += ", " + partes[1].trim();
+            // Só adiciona a linha se ela não estiver totalmente em branco
+            if (!linhaVazia) {
+                tr.innerHTML = linhaHtml;
+                tbody.appendChild(tr);
             }
-
-            if (ruaLimpa) {
-                pontosParaRota.push(encodeURIComponent(ruaLimpa));
-            }
-        });
-
-        if (pontosParaRota.length === 0) {
-            alert("Nenhum endereço válido identificado para a rota.");
-            return;
         }
-
-        if (pontosParaRota.length > 25) {
-            alert("O Google Maps aceita no máximo 25 paradas por vez. Abrindo os primeiros 25 pontos.");
-            pontosParaRota = pontosParaRota.slice(0, 25);
-        }
-
-        let urlMaps = `https://www.google.com/maps/dir/${pontosParaRota.join('/')}`;
-        window.open(urlMaps, '_blank');
     }
 </script>
 
