@@ -31,6 +31,26 @@
             margin: 0;
         }
         
+        /* Barra superior com botão de Manual */
+        .top-bar {
+            display: flex;
+            justify-content: flex-end;
+            margin-bottom: 20px;
+        }
+        .btn-manual {
+            background-color: #4a5568;
+            color: white;
+            text-decoration: none;
+            font-size: 13px;
+            font-weight: bold;
+            padding: 8px 14px;
+            border-radius: 6px;
+            transition: background 0.2s;
+        }
+        .btn-manual:hover {
+            background-color: #2d3748;
+        }
+
         /* Grid do Dashboard */
         .dashboard-grid {
             display: grid;
@@ -87,7 +107,7 @@
             background-color: #2c7a7b;
         }
 
-        /* Variação de cor para destaque */
+        /* Variações de cor */
         .card-modulo.destaque {
             border-top-color: #d97706;
         }
@@ -100,7 +120,7 @@
 
         .card-modulo.em-breve {
             border-top-color: #a0aec0;
-            opacity: 0.8;
+            opacity: 0.85;
         }
         .card-modulo.em-breve .btn-acao {
             background-color: #718096;
@@ -116,16 +136,35 @@
         <p class="subtitle">Selecione o módulo desejado para gerenciar as operações</p>
     </header>
 
+    <!-- Atalho para o Manual de Instruções -->
+    <div class="top-bar">
+        <a href="instrucoes.html" class="btn-manual">📖 Manual de Instruções</a>
+    </div>
+
     <div class="dashboard-grid">
         
-        <!-- Módulo de Execução de Rota (Ativo) -->
+        <!-- 1. Controle de Execução de Rota -->
         <div class="card-modulo destaque">
             <h3>📍 Controle de Execução de Rota</h3>
             <p>Check de campo individualizado das paradas com listas numeradas, salvamento automático local e exportação limpa em PDF e TXT.</p>
             <a href="check_rota.html" class="btn-acao">Acessar Módulo</a>
         </div>
 
-        <!-- Módulo Futuro: Banco de Dados de Fiscalizações do RS -->
+        <!-- 2. Extrator -->
+        <div class="card-modulo">
+            <h3>🔍 Extrator de Dados</h3>
+            <p>Ferramenta auxiliar para extração e processamento de dados e textos brutos de relatórios e protocolos.</p>
+            <a href="extrator.html" class="btn-acao">Acessar Módulo</a>
+        </div>
+
+        <!-- 3. Planejador -->
+        <div class="card-modulo">
+            <h3>🗺️ Planejador de Rotas e Blocos</h3>
+            <p>Organização prévia e estruturação de rotas por zonas geográficas e blocos operacionais de atendimento.</p>
+            <a href="planejador.html" class="btn-acao">Acessar Módulo</a>
+        </div>
+
+        <!-- 4. Banco de Dados de Fiscalizações do RS (Em Breve) -->
         <div class="card-modulo em-breve">
             <h3>🏛️ Banco de Dados de Fiscalizações do RS</h3>
             <p>Repositório sólido unificado de dados, diretrizes e registros de fiscalizações em todo o estado do Rio Grande do Sul.</p>
