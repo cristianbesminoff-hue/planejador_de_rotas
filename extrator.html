@@ -3,9 +3,11 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Extrator e Seletor de Colunas</title>
-    <!-- Biblioteca SheetJS para leitura de Excel no navegador -->
+    <title>Roteirizador Inteligente - Relatório em Texto</title>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+    <!-- Leaflet CSS & JS -->
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
     <style>
         body {
             font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
@@ -15,7 +17,7 @@
             color: #333;
         }
         .container {
-            max-width: 900px;
+            max-width: 950px;
             margin: 0 auto;
             background: #fff;
             padding: 20px;
@@ -77,6 +79,22 @@
             word-break: break-all;
         }
 
+        .modo-selector {
+            display: flex;
+            gap: 15px;
+            background: #edf2f7;
+            padding: 10px;
+            border-radius: 4px;
+            margin-bottom: 12px;
+        }
+        .modo-selector label {
+            font-weight: normal;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            gap: 5px;
+        }
+
         .checkbox-container {
             display: grid;
             grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
@@ -85,7 +103,7 @@
             border: 1px solid #cbd5e0;
             padding: 10px;
             border-radius: 4px;
-            max-height: 150px;
+            max-height: 130px;
             overflow-y: auto;
             margin-top: 5px;
         }
@@ -95,8 +113,33 @@
             align-items: center;
             gap: 6px;
         }
-        .checkbox-item input {
-            width: auto;
+        .checkbox-item input { width: auto; }
+
+        .grid-2 {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 10px;
+        }
+
+        #mapaVisual {
+            width: 100%;
+            height: 400px;
+            border-radius: 6px;
+            margin-top: 15px;
+            border: 1px solid #cbd5e0;
+            display: none;
+        }
+
+        .numero-pin {
+            background-color: #2b6cb0;
+            color: white;
+            border: 2px solid #fff;
+            border-radius: 50%;
+            text-align: center;
+            font-weight: bold;
+            font-size: 11px;
+            line-height: 24px;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.3);
         }
 
         .table-responsive {
@@ -108,20 +151,13 @@
             max-height: 400px;
         }
 
-        table {
-            width: 100%;
-            border-collapse: collapse;
-            table-layout: fixed; /* Força a tabela a respeitar os limites */
-        }
+        table { width: 100%; border-collapse: collapse; }
         th, td {
             padding: 8px 10px;
             text-align: left;
             font-size: 11px;
             border-bottom: 1px solid #cbd5e0;
             border-right: 1px solid #cbd5e0;
-            word-wrap: break-word; /* Quebra palavras longas para não vazar */
-            overflow-wrap: break-word;
-            white-space: normal; /* Permite quebra de linha interna */
         }
         th {
             background-color: #2b6cb0;
@@ -146,6 +182,11 @@
         }
         .btn-action:hover { background-color: #2c7a7b; }
 
+        .button-row {
+            display: flex;
+            gap: 10px;
+            margin-top: 10px;
+        }
         .btn-print {
             background-color: #d97706;
             color: white;
@@ -153,13 +194,42 @@
             font-weight: bold;
             cursor: pointer;
             padding: 10px;
-            margin-top: 10px;
             border-radius: 4px;
-            width: 100%;
+            flex: 1;
             font-size: 14px;
             display: none;
         }
         .btn-print:hover { background-color: #b45309; }
+
+        .btn-waze {
+            background-color: #3182ce;
+            color: white;
+            border: none;
+            font-weight: bold;
+            cursor: pointer;
+            padding: 10px;
+            border-radius: 4px;
+            flex: 1;
+            font-size: 14px;
+            display: none;
+            text-align: center;
+            text-decoration: none;
+        }
+        .btn-waze:hover { background-color: #2b6cb0; }
+
+        .btn-txt {
+            background-color: #4a5568;
+            color: white;
+            border: none;
+            font-weight: bold;
+            cursor: pointer;
+            padding: 10px;
+            border-radius: 4px;
+            flex: 1;
+            font-size: 14px;
+            display: none;
+        }
+        .btn-txt:hover { background-color: #2d3748; }
 
         .btn-back {
             display: block;
@@ -177,25 +247,39 @@
         }
         .btn-back:hover { background-color: #2d3748; }
 
-        /* Configuração estrita para Impressão e PDF (Modo Paisagem) */
+        .instructions {
+            background: #ebf8ff;
+            border-left: 4px solid #3182ce;
+            padding: 10px;
+            font-size: 12px;
+            color: #2b6cb0;
+            margin-bottom: 12px;
+            border-radius: 0 4px 4px 0;
+        }
+
+        #statusCarregamento {
+            font-size: 12px;
+            color: #d97706;
+            font-weight: bold;
+            margin-top: 8px;
+            text-align: center;
+        }
+
+        /* Regra de Impressão: Oculta menus e mapa, foca apenas na tabela limpa */
         @media print {
-            @page {
-                size: landscape;
-                margin: 10mm;
-            }
-            body { background-color: #fff; padding: 0; font-size: 10px; }
-            .container { box-shadow: none; padding: 0; max-width: 100%; width: 100%; }
-            .form-section, .btn-action, .btn-print, .btn-back { display: none !important; }
+            body { background-color: #fff; padding: 0; }
+            .form-section, .btn-back, #mapaVisual, .button-row, .instructions, h2 { display: none !important; }
+            .container { max-width: 100%; padding: 0; box-shadow: none; }
             .table-responsive { max-height: none; border: none; overflow: visible; }
-            table { width: 100%; table-layout: fixed; }
-            th, td { padding: 6px; font-size: 10px; border: 1px solid #000; }
+            table { border: 1px solid #333; }
+            th { background-color: #ddd !important; color: black !important; }
         }
     </style>
 </head>
 <body>
 
 <div class="container">
-    <h2>Extrator e Seletor de Colunas</h2>
+    <h2>Roteirizador Inteligente (Relatório em Texto)</h2>
     
     <div class="form-section">
         <div class="control-group">
@@ -210,35 +294,77 @@
         </div>
 
         <div class="control-group" style="margin-top: 12px;">
-            <label for="cidadeFiltro">2. Filtrar por Cidade (Opcional):</label>
-            <input list="cidadesRS" id="cidadeFiltro" placeholder="Ex: Canoas (Deixe em branco para todas)...">
-            <datalist id="cidadesRS">
-                <option value="Canoas">
-                <option value="Porto Alegre">
-                <option value="Cachoeirinha">
-                <option value="Nova Santa Rita">
-                <option value="Esteio">
-                <option value="Sapucaia do Sul">
-                <option value="São Leopoldo">
-                <option value="Novo Hamburgo">
-                <option value="Alvorada">
-                <option value="Gravataí">
-                <option value="Viamão">
-            </datalist>
+            <label>2. Como você deseja processar as localizações?</label>
+            <div class="modo-selector">
+                <label><input type="radio" name="modoLocalizacao" value="endereco" checked onchange="alternarModo()"> Endereço com CEP (Busca no Mapa)</label>
+                <label><input type="radio" name="modoLocalizacao" value="coordenadas" onchange="alternarModo()"> Latitude / Longitude (Direto)</label>
+            </div>
+        </div>
+
+        <!-- Seção Endereço -->
+        <div id="blocoEndereco">
+            <div class="control-group">
+                <label for="selectColunaEndereco">Selecione a coluna exata de Endereço:</label>
+                <select id="selectColunaEndereco">
+                    <option value="">Carregue a planilha primeiro...</option>
+                </select>
+            </div>
+            <div class="control-group" style="margin-top: 8px;">
+                <label for="cidadeFiltro">Cidade / Região Principal:</label>
+                <input list="cidadesRS" id="cidadeFiltro" value="Canoas" placeholder="Ex: Canoas, Porto Alegre...">
+                <datalist id="cidadesRS">
+                    <option value="Canoas">
+                    <option value="Porto Alegre">
+                    <option value="Cachoeirinha">
+                    <option value="Nova Santa Rita">
+                    <option value="Esteio">
+                    <option value="Sapucaia do Sul">
+                </datalist>
+            </div>
+        </div>
+
+        <!-- Seção Coordenadas -->
+        <div id="blocoCoordenadas" style="display: none;">
+            <div class="grid-2">
+                <div class="control-group">
+                    <label for="selectColunaLat">Coluna de Latitude:</label>
+                    <select id="selectColunaLat">
+                        <option value="">Carregue a planilha...</option>
+                    </select>
+                </div>
+                <div class="control-group">
+                    <label for="selectColunaLon">Coluna de Longitude:</label>
+                    <select id="selectColunaLon">
+                        <option value="">Carregue a planilha...</option>
+                    </select>
+                </div>
+            </div>
+            <div class="control-group" style="margin-top: 8px;">
+                <label for="cidadeFiltroCoord">Filtrar por Cidade (Opcional):</label>
+                <input id="cidadeFiltroCoord" placeholder="Ex: Canoas, Porto Alegre...">
+            </div>
         </div>
 
         <div class="control-group" style="margin-top: 12px;">
-            <label>3. Selecione quais colunas deseja extrair:</label>
+            <label>3. Selecione quais colunas deseja exibir na Tabela:</label>
             <div id="seletorColunas" class="checkbox-container">
                 <span style="font-size: 12px; color: #718096; padding: 5px;">Carregue uma planilha primeiro...</span>
             </div>
         </div>
 
-        <button class="btn-action" onclick="processarExtracao()" id="btnProcessar" disabled>⚙️ Extrair e Gerar Lista</button>
+        <button class="btn-action" onclick="executarProcessamento()" id="btnProcessar" disabled>⚙️ Gerar Rota Otimizada</button>
+        <div id="statusCarregamento"></div>
     </div>
 
     <div id="relatorio-conteudo">
-        <h3 style="font-size: 14px; margin-bottom: 5px; color: #2d3748;">Resultado Extraído (<span id="contadorLinhas">0</span> registros)</h3>
+        <h3 style="font-size: 14px; margin-bottom: 5px; color: #2d3748;">Lista Sequencial Otimizada (<span id="contadorLinhas">0</span> registros)</h3>
+        
+        <div class="instructions" id="instrucoesRota" style="display:none;">
+            📋 <strong>Pronto:</strong> Clique em "Imprimir / Salvar PDF" para gerar um documento limpo contendo apenas a tabela sequencial, ou baixe o arquivo de texto bruto.
+        </div>
+
+        <div id="mapaVisual"></div>
+
         <div class="table-responsive">
             <table id="tabelaDados">
                 <thead id="cabecalhoTabela">
@@ -249,7 +375,12 @@
                 </tbody>
             </table>
         </div>
-        <button class="btn-print" id="btnImprimir" onclick="window.print()">🖨️ Imprimir / Salvar em PDF</button>
+
+        <div class="button-row">
+            <button class="btn-print" id="btnImprimir" onclick="window.print()">🖨️ Imprimir / Salvar PDF Limpo</button>
+            <button class="btn-txt" id="btnTxt" onclick="baixarArquivoTexto()">📄 Baixar TXT da Rota</button>
+            <a href="#" id="btnWaze" class="btn-waze" target="_blank">🚗 Abrir Rota no Waze</a>
+        </div>
     </div>
 
     <a href="index.html" class="btn-back">⬅️ Voltar para o Menu Principal</a>
@@ -258,11 +389,25 @@
 <script>
     let dadosBrutos = [];
     let cabecalhosGlobais = [];
+    let indicesTabelaGlobais = [];
+    let linhasProcessadasCompletas = [];
+    let mapaLeaflet = null;
+    let camadaMarcadores = null;
+
+    function alternarModo() {
+        const modo = document.querySelector('input[name="modoLocalizacao"]:checked').value;
+        if (modo === 'endereco') {
+            document.getElementById('blocoEndereco').style.display = 'block';
+            document.getElementById('blocoCoordenadas').style.display = 'none';
+        } else {
+            document.getElementById('blocoEndereco').style.display = 'none';
+            document.getElementById('blocoCoordenadas').style.display = 'block';
+        }
+    }
 
     function carregarArquivo(e) {
         const arquivo = e.target.files[0];
         if (!arquivo) return;
-
         document.getElementById('nomeArquivo').innerText = "Arquivo: " + arquivo.name;
 
         const leitor = new FileReader();
@@ -277,7 +422,7 @@
                 if (json.length > 0) {
                     cabecalhosGlobais = json[0];
                     dadosBrutos = json.slice(1);
-                    gerarCheckboxesColunas(cabecalhosGlobais);
+                    preencherSeletores(cabecalhosGlobais);
                     document.getElementById('btnProcessar').disabled = false;
                 }
             } catch (erro) {
@@ -288,86 +433,295 @@
         leitor.readAsArrayBuffer(arquivo);
     }
 
-    function gerarCheckboxesColunas(cabecalhos) {
-        const container = document.getElementById('seletorColunas');
-        container.innerHTML = '';
+    function preencherSeletores(cabecalhos) {
+        const selectEndereco = document.getElementById('selectColunaEndereco');
+        const selectLat = document.getElementById('selectColunaLat');
+        const selectLon = document.getElementById('selectColunaLon');
+        const containerCheckboxes = document.getElementById('seletorColunas');
+        
+        selectEndereco.innerHTML = '<option value="">-- Endereço --</option>';
+        selectLat.innerHTML = '<option value="">-- Latitude --</option>';
+        selectLon.innerHTML = '<option value="">-- Longitude --</option>';
+        containerCheckboxes.innerHTML = '';
 
         cabecalhos.forEach((col, index) => {
             if (col !== undefined && col !== null && col !== '') {
+                let nomeLower = col.toString().toLowerCase();
+
+                let optEnd = document.createElement('option');
+                optEnd.value = index;
+                optEnd.text = col;
+                if (nomeLower.includes('end') || nomeLower.includes('rua') || nomeLower.includes('logradouro')) optEnd.selected = true;
+                selectEndereco.appendChild(optEnd);
+
+                let optLat = document.createElement('option');
+                optLat.value = index;
+                optLat.text = col;
+                if (nomeLower.includes('lat') || nomeLower.includes('latitude')) optLat.selected = true;
+                selectLat.appendChild(optLat);
+
+                let optLon = document.createElement('option');
+                optLon.value = index;
+                optLon.text = col;
+                if (nomeLower.includes('lon') || nomeLower.includes('lng') || nomeLower.includes('longitude')) optLon.selected = true;
+                selectLon.appendChild(optLon);
+
                 let div = document.createElement('div');
                 div.className = 'checkbox-item';
                 div.innerHTML = `
                     <input type="checkbox" id="col_${index}" value="${index}" checked>
                     <label for="col_${index}" style="display:inline; font-weight:normal; cursor:pointer;">${col}</label>
                 `;
-                container.appendChild(div);
+                containerCheckboxes.appendChild(div);
             }
         });
     }
 
-    function processarExtracao() {
+    async function executarProcessamento() {
         if (dadosBrutos.length === 0) return;
 
+        const modo = document.querySelector('input[name="modoLocalizacao"]:checked').value;
         const checkboxes = document.querySelectorAll('#seletorColunas input[type="checkbox"]:checked');
-        let indicesSelecionados = Array.from(checkboxes).map(cb => parseInt(cb.value));
+        indicesTabelaGlobais = Array.from(checkboxes).map(cb => parseInt(cb.value));
+        const statusDiv = document.getElementById('statusCarregamento');
+        const btnProc = document.getElementById('btnProcessar');
 
-        if (indicesSelecionados.length === 0) {
-            alert("Selecione pelo menos uma coluna para extrair.");
-            return;
+        btnProc.disabled = true;
+        let arrayComCoordenadas = [];
+
+        if (modo === 'endereco') {
+            const indiceEndereco = parseInt(document.getElementById('selectColunaEndereco').value);
+            if (isNaN(indiceEndereco)) {
+                alert("Por favor, selecione a coluna de Endereço.");
+                btnProc.disabled = false;
+                return;
+            }
+
+            const cidadeBusca = document.getElementById('cidadeFiltro').value.trim();
+            let dadosFiltrados = dadosBrutos.filter(linha => {
+                if (!cidadeBusca) return true;
+                return linha.some(celula => celula && celula.toString().toLowerCase().includes(cidadeBusca.toLowerCase()));
+            });
+
+            let totalRegistros = dadosFiltrados.length;
+
+            for (let i = 0; i < totalRegistros; i++) {
+                let linha = dadosFiltrados[i];
+                statusDiv.innerText = `🔍 Geocodificando endereço ${i + 1} de ${totalRegistros}...`;
+                
+                let textoEndereco = linha[indiceEndereco] !== undefined && linha[indiceEndereco] !== null ? linha[indiceEndereco].toString().trim() : "";
+                if (!textoEndereco) continue; 
+
+                let queryCompleta = textoEndereco;
+                if (cidadeBusca && !queryCompleta.toLowerCase().includes(cidadeBusca.toLowerCase())) {
+                    queryCompleta += ", " + cidadeBusca;
+                }
+                if (!queryCompleta.toLowerCase().includes("rs")) queryCompleta += " - RS";
+                if (!queryCompleta.toLowerCase().includes("brasil")) queryCompleta += ", Brasil";
+
+                try {
+                    let resposta = await fetch(`https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(queryCompleta)}&limit=1`, {
+                        headers: { 'User-Agent': 'RoteirizadorCampoApp/1.0' }
+                    });
+                    let resultadoJson = await resposta.json();
+
+                    if (resultadoJson && resultadoJson.length > 0) {
+                        arrayComCoordenadas.push({
+                            linhaOriginal: linha,
+                            lat: parseFloat(resultadoJson[0].lat),
+                            lon: parseFloat(resultadoJson[0].lon),
+                            display_name: queryCompleta
+                        });
+                    } else {
+                        arrayComCoordenadas.push({ linhaOriginal: linha, lat: -29.9179 + (i * 0.0005), lon: -51.1837, display_name: queryCompleta });
+                    }
+                    await new Promise(resolve => setTimeout(resolve, 1000));
+                } catch (err) {
+                    console.error(err);
+                    arrayComCoordenadas.push({ linhaOriginal: linha, lat: -29.9179, lon: -51.1837, display_name: queryCompleta });
+                }
+            }
+
+        } else {
+            const indiceLat = parseInt(document.getElementById('selectColunaLat').value);
+            const indiceLon = parseInt(document.getElementById('selectColunaLon').value);
+            
+            if (isNaN(indiceLat) || isNaN(indiceLon)) {
+                alert("Por favor, selecione as colunas de Latitude e Longitude.");
+                btnProc.disabled = false;
+                return;
+            }
+
+            statusDiv.innerText = "⚡ Lendo coordenadas diretamente da planilha...";
+            const cidadeBusca = document.getElementById('cidadeFiltroCoord').value.trim();
+
+            let dadosFiltrados = dadosBrutos.filter(linha => {
+                if (!cidadeBusca) return true;
+                return linha.some(celula => celula && celula.toString().toLowerCase().includes(cidadeBusca.toLowerCase()));
+            });
+
+            dadosFiltrados.forEach((linha) => {
+                let latVal = parseFloat(linha[indiceLat]);
+                let lonVal = parseFloat(linha[indiceLon]);
+
+                if (!isNaN(latVal) && !isNaN(lonVal)) {
+                    arrayComCoordenadas.push({
+                        linhaOriginal: linha,
+                        lat: latVal,
+                        lon: lonVal,
+                        display_name: `Lat: ${latVal}, Lon: ${lonVal}`
+                    });
+                }
+            });
         }
 
-        const cidadeBusca = document.getElementById('cidadeFiltro').value.trim().toLowerCase();
+        // Algoritmo de Otimização (Vizinho Mais Próximo)
+        let rotaOtimizada = [];
+        let naoVisitados = [...arrayComCoordenadas];
+        
+        if (naoVisitados.length > 0) {
+            let atual = naoVisitados.shift();
+            rotaOtimizada.push(atual);
 
-        let dadosFiltrados = dadosBrutos.filter(linha => {
-            if (!cidadeBusca) return true;
-            return linha.some(celula => celula && celula.toString().toLowerCase().includes(cidadeBusca));
-        });
+            while (naoVisitados.length > 0) {
+                let maisProximoIndex = 0;
+                let menorDistancia = Infinity;
 
-        renderizarTabelaCustomizada(indicesSelecionados, dadosFiltrados);
+                for (let j = 0; j < naoVisitados.length; j++) {
+                    let dist = Math.hypot(naoVisitados[j].lat - atual.lat, naoVisitados[j].lon - atual.lon);
+                    if (dist < menorDistancia) {
+                        menorDistancia = dist;
+                        maisProximoIndex = j;
+                    }
+                }
+                atual = naoVisitados.splice(maisProximoIndex, 1)[0];
+                rotaOtimizada.push(atual);
+            }
+        }
+
+        linhasProcessadasCompletas = rotaOtimizada;
+        statusDiv.innerText = "";
+        btnProc.disabled = false;
+
+        renderizarTabelaEValores();
     }
 
-    function renderizarTabelaCustomizada(indices, linhas) {
+    function renderizarTabelaEValores() {
         const thead = document.getElementById('cabecalhoTabela');
         const tbody = document.getElementById('corpoTabela');
         const contador = document.getElementById('contadorLinhas');
         const btnImprimir = document.getElementById('btnImprimir');
+        const btnTxt = document.getElementById('btnTxt');
+        const btnWaze = document.getElementById('btnWaze');
+        const instrucoes = document.getElementById('instrucoesRota');
 
         thead.innerHTML = '';
         tbody.innerHTML = '';
-        contador.innerText = linhas.length;
+        contador.innerText = linhasProcessadasCompletas.length;
 
-        if (linhas.length === 0) {
-            tbody.innerHTML = `<tr><td>Nenhum registro encontrado para este filtro.</td></tr>`;
-            btnImprimir.style.display = 'none';
+        if (linhasProcessadasCompletas.length === 0) {
+            tbody.innerHTML = `<tr><td>Nenhum registro processado com sucesso.</td></tr>`;
             return;
         }
 
-        let trHead = '<tr>';
-        indices.forEach(idx => {
+        let trHead = '<tr><th style="width: 50px; text-align: center;">Seq</th>';
+        indicesTabelaGlobais.forEach(idx => {
             let nomeColuna = cabecalhosGlobais[idx] || `Coluna ${idx}`;
             trHead += `<th>${nomeColuna}</th>`;
         });
         trHead += '</tr>';
         thead.innerHTML = trHead;
 
-        linhas.forEach(linha => {
-            let tr = document.createElement('tr');
-            let linhaHtml = '';
-            let vazia = true;
+        let primeiroPonto = null;
 
-            indices.forEach(idx => {
-                let valor = linha[idx] !== undefined ? linha[idx] : '';
-                if (valor !== '') vazia = false;
+        linhasProcessadasCompletas.forEach((item, rowIndex) => {
+            let tr = document.createElement('tr');
+            let seqHtml = `<td style="text-align: center; font-weight: bold; background: #edf2f7;">#${rowIndex + 1}</td>`;
+            let linhaHtml = seqHtml;
+
+            indicesTabelaGlobais.forEach(idx => {
+                let valor = item.linhaOriginal[idx] !== undefined ? item.linhaOriginal[idx] : '';
                 linhaHtml += `<td>${valor}</td>`;
             });
 
-            if (!vazia) {
-                tr.innerHTML = linhaHtml;
-                tbody.appendChild(tr);
-            }
+            tr.innerHTML = linhaHtml;
+            tbody.appendChild(tr);
+
+            if (rowIndex === 0) primeiroPonto = item;
         });
 
         btnImprimir.style.display = 'block';
+        btnTxt.style.display = 'block';
+        btnWaze.style.display = 'block';
+        instrucoes.style.display = 'block';
+
+        if (primeiroPonto) {
+            const modo = document.querySelector('input[name="modoLocalizacao"]:checked').value;
+            if (modo === 'endereco') {
+                btnWaze.href = `https://www.waze.com/ul?q=${encodeURIComponent(primeiroPonto.display_name)}&navigate=yes`;
+            } else {
+                btnWaze.href = `https://www.waze.com/ul?ll=${primeiroPonto.lat},${primeiroPonto.lon}&navigate=yes`;
+            }
+        }
+
+        desenharMapaNaTela(linhasProcessadasCompletas);
+    }
+
+    function desenharMapaNaTela(pontos) {
+        const divMapa = document.getElementById('mapaVisual');
+        divMapa.style.display = 'block';
+
+        let centroLat = pontos[0] ? pontos[0].lat : -29.9179;
+        let centroLon = pontos[0] ? pontos[0].lon : -51.1837;
+
+        if (!mapaLeaflet) {
+            mapaLeaflet = L.map('mapaVisual').setView([centroLat, centroLon], 13);
+            L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+                maxZoom: 19,
+                attribution: '© OpenStreetMap'
+            }).addTo(mapaLeaflet);
+            camadaMarcadores = L.layerGroup().addTo(mapaLeaflet);
+        } else {
+            mapaLeaflet.setView([centroLat, centroLon], 13);
+            camadaMarcadores.clearLayers();
+        }
+
+        pontos.forEach((pt, index) => {
+            let iconeNumerado = L.divIcon({
+                className: 'custom-div-icon',
+                html: `<div class="numero-pin">${index + 1}</div>`,
+                iconSize: [26, 26],
+                iconAnchor: [13, 13]
+            });
+
+            L.marker([pt.lat, pt.lon], { icon: iconeNumerado }).addTo(camadaMarcadores)
+                .bindPopup(`<b>Parada #${index + 1}</b><br>${pt.display_name}`);
+        });
+
+        setTimeout(() => { mapaLeaflet.invalidateSize(); }, 200);
+    }
+
+    function baixarArquivoTexto() {
+        if (linhasProcessadasCompletas.length === 0) return;
+
+        let conteudoTexto = "ROTEIRO SEQUENCIAL OTIMIZADO\n";
+        conteudoTexto += "========================================\n\n";
+
+        linhasProcessadasCompletas.forEach((item, index) => {
+            conteudoTexto += `Parada #${index + 1}\n`;
+            indicesTabelaGlobais.forEach(idx => {
+                let nomeColuna = cabecalhosGlobais[idx] || `Coluna ${idx}`;
+                let valor = item.linhaOriginal[idx] !== undefined ? item.linhaOriginal[idx] : '';
+                conteudoTexto += `- ${nomeColuna}: ${valor}\n`;
+            });
+            conteudoTexto += "----------------------------------------\n";
+        });
+
+        let blob = new Blob([conteudoTexto], { type: 'text/plain;charset=utf-8' });
+        let link = document.createElement('a');
+        link.href = URL.createObjectURL(blob);
+        link.download = 'rota_otimizada.txt';
+        link.click();
     }
 </script>
 
