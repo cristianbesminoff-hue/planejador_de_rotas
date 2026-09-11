@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Roteirizador Inteligente - Menu Principal</title>
+    <title>Painel de Controle - Logística e Campo</title>
     <style>
         body {
             font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
@@ -11,63 +11,118 @@
             margin: 0;
             padding: 20px;
             color: #333;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            min-height: 100vh;
         }
         .container {
-            max-width: 500px;
-            width: 100%;
-            background: #fff;
-            padding: 30px;
-            border-radius: 8px;
-            box-shadow: 0 2px 5px rgba(0,0,0,0.1);
-            box-sizing: border-box;
-            text-align: center;
+            max-width: 1000px;
+            margin: 0 auto;
         }
-        h1 { font-size: 20px; color: #1a365d; margin-top: 0; margin-bottom: 8px; }
-        p { font-size: 13px; color: #718096; margin-bottom: 25px; }
+        header {
+            text-align: center;
+            margin-bottom: 30px;
+        }
+        h1 {
+            font-size: 22px;
+            color: #1a365d;
+            margin-bottom: 5px;
+        }
+        p.subtitle {
+            font-size: 13px;
+            color: #718096;
+            margin: 0;
+        }
         
-        .menu-list {
-            display: flex;
-            flex-direction: column;
-            gap: 12px;
+        /* Grid do Dashboard */
+        .dashboard-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+            gap: 20px;
         }
 
-        .menu-btn {
-            display: block;
-            width: 100%;
-            padding: 15px;
-            background-color: #2b6cb0;
+        /* Cartão de Módulo */
+        .card-modulo {
+            background: #fff;
+            border: 1px solid #cbd5e0;
+            border-radius: 8px;
+            padding: 20px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+            transition: transform 0.2s, box-shadow 0.2s;
+            border-top: 4px solid #3182ce;
+        }
+        .card-modulo:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 4px 10px rgba(0,0,0,0.1);
+        }
+        
+        .card-modulo h3 {
+            font-size: 16px;
+            margin-top: 0;
+            margin-bottom: 10px;
+            color: #2d3748;
+        }
+        .card-modulo p {
+            font-size: 13px;
+            color: #4a5568;
+            line-height: 1.4;
+            margin-bottom: 20px;
+            flex-grow: 1;
+        }
+
+        /* Botão do Cartão */
+        .btn-acao {
+            background-color: #319795;
             color: white;
             text-align: center;
             text-decoration: none;
             font-weight: bold;
-            font-size: 14px;
-            border-radius: 6px;
+            font-size: 13px;
+            padding: 10px;
+            border-radius: 4px;
+            display: block;
             box-sizing: border-box;
-            transition: background-color 0.2s;
         }
-        .menu-btn:hover { background-color: #2c5282; }
+        .btn-acao:hover {
+            background-color: #2c7a7b;
+        }
 
-        .menu-btn.manual { background-color: #319795; }
-        .menu-btn.manual:hover { background-color: #2c7a7b; }
-
-        .menu-btn.help { background-color: #4a5568; }
-        .menu-btn.help:hover { background-color: #2d3748; }
+        /* Variação de cor para outros módulos se houver */
+        .card-modulo.destaque {
+            border-top-color: #d97706;
+        }
+        .card-modulo.destaque .btn-acao {
+            background-color: #d97706;
+        }
+        .card-modulo.destaque .btn-acao:hover {
+            background-color: #b45309;
+        }
     </style>
 </head>
 <body>
 
 <div class="container">
-    <h1>Roteirizador Inteligente</h1>
-    <p>Selecione a ferramenta desejada para continuar:</p>
+    <header>
+        <h1>Painel de Controle de Campo</h1>
+        <p class="subtitle">Selecione o módulo desejado para gerenciar as operações</p>
+    </header>
 
-    <div class="menu-list">
-        <a href="extrator.html" class="menu-btn">📊 Extrator e Roteirizador por Planilha</a>
-        <a href="planejador.html" class="menu-btn manual">🗺️ Roteirizador Manual</a>
-        <a href="instrucoes.html" class="menu-btn help">📖 Manual de Instruções</a>
+    <div class="dashboard-grid">
+        
+        <!-- Módulo de Execução de Rota (Novo) -->
+        <div class="card-modulo destaque">
+            <h3>📍 Controle de Execução de Rota</h3>
+            <p>Check de campo individualizado das paradas, com salvamento automático e exportação de relatórios em PDF/TXT.</p>
+            <a href="check_rota.html" class="btn-acao">Acessar Módulo</a>
+        </div>
+
+        <!-- Exemplo de outro módulo futuro ou existente -->
+        <div class="card-modulo">
+            <h3>📋 Gestão de Protocolos</h3>
+            <p>Organização de chamados por zona, blocos e otimização de rotas para as equipes técnicas.</p>
+            <a href="#" class="btn-acao">Em Breve</a>
+        </div>
+
     </div>
 </div>
 
