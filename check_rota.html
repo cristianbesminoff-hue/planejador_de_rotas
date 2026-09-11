@@ -1,0 +1,486 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Controle de Execução de Rota - Check de Campo</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
+    <style>
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+            background-color: #f4f6f9;
+            margin: 0;
+            padding: 10px;
+            color: #333;
+        }
+        .container {
+            max-width: 950px;
+            margin: 0 auto;
+            background: #fff;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+            box-sizing: border-box;
+        }
+        h2 { font-size: 18px; margin-top: 0; color: #1a365d; text-align: center; }
+        
+        .form-section {
+            background: #f8fafc;
+            border: 1px solid #e2e8f0;
+            padding: 15px;
+            border-radius: 6px;
+            margin-bottom: 15px;
+        }
+        .control-group { margin-bottom: 12px; }
+        label { font-size: 13px; font-weight: bold; color: #2d3748; display: block; margin-bottom: 6px; }
+        
+        textarea {
+            width: 100%;
+            height: 110px;
+            padding: 10px;
+            font-size: 13px;
+            border: 1px solid #cbd5e0;
+            border-radius: 4px;
+            resize: vertical;
+            box-sizing: border-box;
+            font-family: inherit;
+        }
+
+        .btn-action {
+            background-color: #319795;
+            color: white;
+            border: none;
+            font-weight: bold;
+            cursor: pointer;
+            padding: 12px;
+            margin-top: 10px;
+            border-radius: 4px;
+            width: 100%;
+            font-size: 14px;
+        }
+        .btn-action:hover { background-color: #2c7a7b; }
+
+        .btn-clear {
+            background-color: #e53e3e;
+            color: white;
+            border: none;
+            font-weight: bold;
+            cursor: pointer;
+            padding: 8px;
+            margin-top: 8px;
+            border-radius: 4px;
+            width: 100%;
+            font-size: 12px;
+        }
+        .btn-clear:hover { background-color: #c53030; }
+
+        .dashboard {
+            display: grid;
+            grid-template-columns: 1fr;
+            gap: 15px;
+            margin-top: 15px;
+        }
+
+        .section-box {
+            background: #fff;
+            border: 1px solid #cbd5e0;
+            border-radius: 6px;
+            padding: 12px;
+        }
+        .section-box h3 {
+            font-size: 14px;
+            margin-top: 0;
+            padding-bottom: 8px;
+            border-bottom: 2px solid #e2e8f0;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .card-parada {
+            background: #f8fafc;
+            border: 1px solid #e2e8f0;
+            border-radius: 6px;
+            padding: 10px;
+            margin-bottom: 8px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            gap: 10px;
+        }
+        .card-info { font-size: 12px; line-height: 1.4; word-break: break-all; flex: 1; }
+        .card-actions { display: flex; gap: 5px; flex-shrink: 0; }
+
+        .btn-ok {
+            background-color: #38a169;
+            color: white;
+            border: none;
+            padding: 6px 10px;
+            border-radius: 4px;
+            font-weight: bold;
+            font-size: 11px;
+            cursor: pointer;
+        }
+        .btn-ok:hover { background-color: #2f855a; }
+
+        .btn-fail {
+            background-color: #e53e3e;
+            color: white;
+            border: none;
+            padding: 6px 10px;
+            border-radius: 4px;
+            font-weight: bold;
+            font-size: 11px;
+            cursor: pointer;
+        }
+        .btn-fail:hover { background-color: #c53030; }
+
+        .btn-reset {
+            background-color: #718096;
+            color: white;
+            border: none;
+            padding: 4px 8px;
+            border-radius: 4px;
+            font-weight: bold;
+            font-size: 10px;
+            cursor: pointer;
+            margin-left: 5px;
+        }
+        .btn-reset:hover { background-color: #4a5568; }
+
+        ol {
+            margin: 0;
+            padding-left: 20px;
+            font-size: 12px;
+        }
+        ol li {
+            margin-bottom: 8px;
+            line-height: 1.4;
+            word-break: break-all;
+        }
+
+        .badge {
+            background: #edf2f7;
+            padding: 2px 8px;
+            border-radius: 10px;
+            font-size: 11px;
+            color: #4a5568;
+        }
+        .badge-ok { background: #c6f6d5; color: #22543d; }
+        .badge-fail { background: #fed7d7; color: #742a2a; }
+
+        .button-row {
+            display: flex;
+            gap: 10px;
+            margin-top: 15px;
+            flex-wrap: wrap;
+        }
+        .btn-export {
+            background-color: #d97706;
+            color: white;
+            border: none;
+            font-weight: bold;
+            cursor: pointer;
+            padding: 10px;
+            border-radius: 4px;
+            flex: 1;
+            min-width: 140px;
+            font-size: 14px;
+        }
+        .btn-export:hover { background-color: #b45309; }
+
+        .btn-back {
+            display: block;
+            width: 100%;
+            padding: 12px;
+            background-color: #4a5568;
+            color: white;
+            text-align: center;
+            text-decoration: none;
+            font-weight: bold;
+            font-size: 14px;
+            border-radius: 6px;
+            box-sizing: border-box;
+            margin-top: 20px;
+        }
+        .btn-back:hover { background-color: #2d3748; }
+
+        .instructions {
+            background: #ebf8ff;
+            border-left: 4px solid #3182ce;
+            padding: 10px;
+            font-size: 12px;
+            color: #2b6cb0;
+            margin-bottom: 12px;
+            border-radius: 0 4px 4px 0;
+        }
+
+        /* Ajustes específicos para limpar o PDF */
+        .pdf-export-mode { background: #fff !important; padding: 15px; }
+        .pdf-export-mode .form-section, 
+        .pdf-export-mode .btn-back, 
+        .pdf-export-mode .button-row, 
+        .pdf-export-mode .card-actions, 
+        .pdf-export-mode .btn-reset, 
+        .pdf-export-mode .instructions, 
+        .pdf-export-mode h2 { display: none !important; }
+    </style>
+</head>
+<body onload="carregarDadosSalvos()">
+
+<div class="container" id="painelGeral">
+    <h2>Controle de Execução de Rota - Check de Campo</h2>
+    
+    <div class="form-section">
+        <div class="control-group">
+            <label>Cole o texto completo da rota gerada abaixo:</label>
+            <textarea id="textoRota" placeholder="Cole aqui o conteúdo copiado do PDF..."></textarea>
+        </div>
+        <button class="btn-action" onclick="processarEProcessarNovaRota()">🚀 Analisar e Separar Paradas Individualmente</button>
+        <button class="btn-clear" onclick="limparDadosSalvos()">🗑️ Limpar Rota Salva / Iniciar Nova</button>
+    </div>
+
+    <div class="instructions">
+        💡 <strong>Salvamento Automático Ativo:</strong> Seus cliques e status são salvos no navegador. Você pode fechar a página e voltar depois que o progresso estará lá. Use o botão vermelho se precisar carregar uma rota totalmente nova.
+    </div>
+
+    <div class="dashboard">
+        <!-- Pendentes -->
+        <div class="section-box" style="border-left: 4px solid #3182ce;">
+            <h3>📍 Paradas Pendentes Individuais <span id="contadorPendentes" class="badge">0</span></h3>
+            <div id="listaPendentes">
+                <p style="font-size: 12px; color: #a0aec0; text-align: center;">Nenhuma rota carregada ainda.</p>
+            </div>
+        </div>
+
+        <!-- Concluídas -->
+        <div class="section-box" style="border-left: 4px solid #38a169;">
+            <h3>✅ Lista Numerada de Concluídas <span id="contadorConcluidas" class="badge badge-ok">0</span></h3>
+            <div id="listaConcluidas">
+                <p style="font-size: 12px; color: #718096; text-align: center;">Nenhuma parada concluída ainda.</p>
+            </div>
+        </div>
+
+        <!-- Sem Conclusão -->
+        <div class="section-box" style="border-left: 4px solid #e53e3e;">
+            <h3>❌ Lista Numerada Sem Conclusão / Impedimentos <span id="contadorSemConclusao" class="badge badge-fail">0</span></h3>
+            <div id="listaSemConclusao">
+                <p style="font-size: 12px; color: #718096; text-align: center;">Nenhum registro sem conclusão.</p>
+            </div>
+        </div>
+    </div>
+
+    <div class="button-row" id="linhaBotoes" style="display: none;">
+        <button class="btn-export" onclick="baixarRelatorioPDF()">📥 Baixar Relatório Final (PDF)</button>
+        <button class="btn-export" style="background-color: #4a5568;" onclick="baixarRelatorioTXT()">📄 Baixar Resumo (TXT)</button>
+    </div>
+
+    <a href="index.html" class="btn-back">⬅️ Voltar para o Menu Principal</a>
+</div>
+
+<script>
+    let paradas = [];
+
+    function carregarDadosSalvos() {
+        let dadosSalvos = localStorage.getItem('check_rota_dados');
+        if (dadosSalvos) {
+            try {
+                paradas = JSON.parse(dadosSalvos);
+                if (paradas.length > 0) {
+                    renderizarListas();
+                    document.getElementById('linhaBotoes').style.display = 'flex';
+                }
+            } catch (e) {
+                console.error("Erro ao carregar dados salvos", e);
+            }
+        }
+    }
+
+    function salvarNoNavegador() {
+        localStorage.setItem('check_rota_dados', JSON.stringify(paradas));
+    }
+
+    function processarEProcessarNovaRota() {
+        let texto = document.getElementById('textoRota').value;
+        if (!texto.trim()) {
+            alert("Por favor, cole o texto da rota antes de analisar.");
+            return;
+        }
+
+        let linhas = texto.split('\n').filter(l => l.trim() !== '');
+        paradas = [];
+        let blocoAtual = "";
+        let contadorId = 1;
+
+        linhas.forEach(linha => {
+            let linhaMaiuscula = linha.toUpperCase();
+            let ehNovaParada = linhaMaiuscula.includes("PARADA") || 
+                               linhaMaiuscula.includes("SEQ") || 
+                               linhaMaiuscula.includes("ROTA") || 
+                               linhaMaiuscula.match(/^#?\d+\s*[-–]/);
+
+            if (ehNovaParada && blocoAtual.trim() !== "") {
+                paradas.push({ id: contadorId++, texto: blocoAtual.trim(), status: 'pendente' });
+                blocoAtual = "";
+            }
+            blocoAtual += linha + " "; // Alterado para espaço para evitar quebras em branco no PDF
+        });
+
+        if (blocoAtual.trim() !== "") {
+            paradas.push({ id: contadorId++, texto: blocoAtual.trim(), status: 'pendente' });
+        }
+
+        if (paradas.length <= 1) {
+            paradas = [];
+            linhas.forEach((linha, idx) => {
+                if (linha.trim() !== "") {
+                    paradas.push({ id: idx + 1, texto: linha.trim(), status: 'pendente' });
+                }
+            });
+        }
+
+        salvarNoNavegador();
+        renderizarListas();
+        document.getElementById('linhaBotoes').style.display = 'flex';
+        alert(`Sucesso! ${paradas.length} paradas individuais identificadas e salvas.`);
+    }
+
+    function alterarStatus(id, novoStatus) {
+        let parada = paradas.find(p => p.id === id);
+        if (parada) {
+            parada.status = novoStatus;
+            salvarNoNavegador();
+            renderizarListas();
+        }
+    }
+
+    function limparDadosSalvos() {
+        if (confirm("Tem certeza que deseja apagar a rota salva e iniciar uma nova?")) {
+            localStorage.removeItem('check_rota_dados');
+            paradas = [];
+            document.getElementById('textoRota').value = '';
+            renderizarListas();
+            document.getElementById('linhaBotoes').style.display = 'none';
+            alert("Dados limpos com sucesso.");
+        }
+    }
+
+    function renderizarListas() {
+        const divPendentes = document.getElementById('listaPendentes');
+        const divConcluidas = document.getElementById('listaConcluidas');
+        const divSemConclusao = document.getElementById('listaSemConclusao');
+
+        divPendentes.innerHTML = '';
+        
+        let htmlConcluidas = '<ol>';
+        let htmlSemConclusao = '<ol>';
+
+        let countP = 0, countC = 0, countS = 0;
+
+        paradas.forEach(p => {
+            // Remove qualquer marcação interna antiga e normaliza espaços
+            let textoLimpo = p.texto.replace(/<br>/g, ' ').replace(/\s+/g, ' ').trim();
+
+            if (p.status === 'pendente') {
+                divPendentes.innerHTML += `
+                    <div class="card-parada">
+                        <div class="card-info"><strong>Parada #${p.id}:</strong><br>${p.texto}</div>
+                        <div class="card-actions">
+                            <button class="btn-ok" onclick="alterarStatus(${p.id}, 'concluida')">✅ Concluído</button>
+                            <button class="btn-fail" onclick="alterarStatus(${p.id}, 'sem_conclusao')">❌ Não Concluído</button>
+                        </div>
+                    </div>
+                `;
+                countP++;
+            } else if (p.status === 'concluida') {
+                htmlConcluidas += `
+                    <li>
+                        ${textoLimpo} 
+                        <button class="btn-reset" onclick="alterarStatus(${p.id}, 'pendente')">↩️ Desfazer</button>
+                    </li>
+                `;
+                countC++;
+            } else if (p.status === 'sem_conclusao') {
+                htmlSemConclusao += `
+                    <li>
+                        ${textoLimpo} 
+                        <button class="btn-reset" onclick="alterarStatus(${p.id}, 'pendente')">↩️ Desfazer</button>
+                    </li>
+                `;
+                countS++;
+            }
+        });
+
+        htmlConcluidas += '</ol>';
+        htmlSemConclusao += '</ol>';
+
+        if (countP === 0 && paradas.length > 0) {
+            divPendentes.innerHTML = '<p style="font-size: 12px; color: #718096; text-align: center;">🎉 Todas as paradas foram processadas!</p>';
+        } else if (paradas.length === 0) {
+            divPendentes.innerHTML = '<p style="font-size: 12px; color: #a0aec0; text-align: center;">Nenhuma rota carregada ainda.</p>';
+        }
+        
+        divConcluidas.innerHTML = countC > 0 ? htmlConcluidas : '<p style="font-size: 12px; color: #718096; text-align: center;">Nenhuma parada concluída ainda.</p>';
+        divSemConclusao.innerHTML = countS > 0 ? htmlSemConclusao : '<p style="font-size: 12px; color: #718096; text-align: center;">Nenhum registro sem conclusão.</p>';
+
+        document.getElementById('contadorPendentes').innerText = countP;
+        document.getElementById('contadorConcluidas').innerText = countC;
+        document.getElementById('contadorSemConclusao').innerText = countS;
+
+        if (paradas.length > 0) {
+            document.getElementById('linhaBotoes').style.display = 'flex';
+        }
+    }
+
+    function baixarRelatorioPDF() {
+        const elemento = document.getElementById('painelGeral');
+        elemento.classList.add('pdf-export-mode');
+
+        const opcoes = {
+            margin:       10,
+            filename:     'relatorio_execucao_rota.pdf',
+            image:        { type: 'jpeg', quality: 0.98 },
+            html2canvas:  { scale: 2, useCORS: true },
+            jsPDF:        { unit: 'mm', format: 'a4', orientation: 'portrait' }
+        };
+
+        html2pdf().from(elemento).set(opcoes).save().then(() => {
+            elemento.classList.remove('pdf-export-mode');
+        }).catch(err => {
+            console.error(err);
+            elemento.classList.remove('pdf-export-mode');
+            alert("Erro ao gerar o PDF.");
+        });
+    }
+
+    function baixarRelatorioTXT() {
+        let texto = "RELATÓRIO DE EXECUÇÃO DE ROTA - CAMPO\n========================================\n\n";
+        
+        texto += "=== LISTA DE CONCLUÍDAS ===\n";
+        let c = 1;
+        paradas.filter(p => p.status === 'concluida').forEach(p => {
+            texto += `${c++}. ${p.texto.replace(/<br>/g, ' ').replace(/\s+/g, ' ').trim()}\n`;
+        });
+
+        texto += "\n=== LISTA SEM CONCLUSÃO / IMPEDIMENTOS ===\n";
+        let s = 1;
+        paradas.filter(p => p.status === 'sem_conclusao').forEach(p => {
+            texto += `${s++}. ${p.texto.replace(/<br>/g, ' ').replace(/\s+/g, ' ').trim()}\n`;
+        });
+
+        texto += "\n=== PENDENTES RESTANTES ===\n";
+        let pnd = 1;
+        paradas.filter(p => p.status === 'pendente').forEach(p => {
+            texto += `${pnd++}. ${p.texto.replace(/<br>/g, ' ').replace(/\s+/g, ' ').trim()}\n`;
+        });
+
+        let blob = new Blob([texto], { type: 'text/plain;charset=utf-8' });
+        let link = document.createElement('a');
+        link.href = URL.createObjectURL(blob);
+        link.download = 'relatorio_execucao.txt';
+        link.click();
+    }
+</script>
+
+</body>
+</html>
