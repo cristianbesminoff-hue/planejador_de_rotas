@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Manual de Instruções - Roteirizador Inteligente</title>
+    <title>Manual de Instruções - Painel de Controle de Campo</title>
     <style>
         body {
             font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
@@ -11,37 +11,77 @@
             margin: 0;
             padding: 20px;
             color: #333;
-            line-height: 1.6;
         }
         .container {
-            max-width: 850px;
+            max-width: 950px;
             margin: 0 auto;
             background: #fff;
             padding: 30px;
             border-radius: 8px;
-            box-shadow: 0 2px 5px rgba(0,0,0,0.1);
-            box-sizing: border-box;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.05);
         }
-        h1 { font-size: 22px; color: #1a365d; text-align: center; margin-top: 0; border-bottom: 2px solid #e2e8f0; padding-bottom: 15px; }
-        h2 { font-size: 16px; color: #2b6cb0; margin-top: 25px; border-left: 4px solid #3182ce; padding-left: 10px; }
-        p, li { font-size: 14px; color: #4a5568; }
-        ul { padding-left: 20px; }
-        li { margin-bottom: 8px; }
-        
-        .step-box {
-            background: #f8fafc;
-            border: 1px solid #e2e8f0;
-            padding: 15px;
-            border-radius: 6px;
-            margin-bottom: 15px;
+        header {
+            text-align: center;
+            margin-bottom: 30px;
         }
-        .step-title {
-            font-weight: bold;
-            color: #2d3748;
+        h1 {
+            font-size: 22px;
+            color: #1a365d;
             margin-bottom: 5px;
-            font-size: 14px;
+        }
+        p.subtitle {
+            font-size: 13px;
+            color: #718096;
+            margin: 0;
         }
 
+        /* Seções / Cartões do Manual */
+        .manual-section {
+            background: #f8fafc;
+            border: 1px solid #e2e8f0;
+            border-left: 4px solid #3182ce;
+            border-radius: 6px;
+            padding: 20px;
+            margin-bottom: 20px;
+        }
+        .manual-section.destaque {
+            border-left-color: #d97706;
+        }
+        .manual-section.em-breve {
+            border-left-color: #a0aec0;
+            opacity: 0.9;
+        }
+
+        h2 {
+            font-size: 16px;
+            color: #2d3748;
+            margin-top: 0;
+            margin-bottom: 12px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        p {
+            font-size: 13px;
+            color: #4a5568;
+            line-height: 1.5;
+            margin-bottom: 12px;
+        }
+
+        /* Lista de Passos */
+        ol {
+            margin: 0;
+            padding-left: 20px;
+            font-size: 13px;
+            color: #4a5568;
+            line-height: 1.6;
+        }
+        ol li {
+            margin-bottom: 8px;
+        }
+
+        /* Botão Voltar */
         .btn-back {
             display: block;
             width: 100%;
@@ -54,54 +94,66 @@
             font-size: 14px;
             border-radius: 6px;
             box-sizing: border-box;
-            margin-top: 25px;
+            margin-top: 30px;
         }
-        .btn-back:hover { background-color: #2d3748; }
+        .btn-back:hover {
+            background-color: #2d3748;
+        }
 
-        @media print {
-            body { background-color: #fff; padding: 0; }
-            .container { max-width: 100%; box-shadow: none; padding: 0; }
-            .btn-back { display: none; }
+        .highlight-box {
+            background: #ebf8ff;
+            border-left: 3px solid #3182ce;
+            padding: 10px 12px;
+            font-size: 12px;
+            color: #2b6cb0;
+            border-radius: 0 4px 4px 0;
+            margin-top: 12px;
         }
     </style>
 </head>
 <body>
 
 <div class="container">
-    <h1>Manual de Instruções e Uso</h1>
-    <p style="text-align: center; font-size: 13px; color: #718096;">Guia prático para operação do Roteirizador Inteligente em campo e escritório.</p>
+    <header>
+        <h1>📖 Manual de Instruções - Painel de Campo</h1>
+        <p class="subtitle">Guia operacional centralizado para a gestão de rotas e logística</p>
+    </header>
 
-    <h2>1. Preparação da Planilha</h2>
-    <div class="step-box">
-        <div class="step-title">Formato do Arquivo</div>
-        <p>Certifique-se de que sua planilha esteja salva nos formatos <strong>.xlsx</strong>, <strong>.xls</strong> ou <strong>.csv</strong>. A primeira linha do arquivo deve conter obrigatoriamente os cabeçalhos das colunas (ex: Protocolo, Endereço, Bairro, Cliente, etc.).</p>
+    <!-- Módulo 1 -->
+    <div class="manual-section destaque">
+        <h2>📍 Módulo 1: Controle de Execução de Rota (<code>check_rota.html</code>)</h2>
+        <p>Este módulo é o seu assistente em tempo real para acompanhar o andamento das paradas em campo de forma individualizada, garantindo que nenhum endereço fique para trás e gerando relatórios profissionais instantâneos.</p>
+        
+        <p><strong>⚙️ Passo a Passo de Utilização:</strong></p>
+        <ol>
+            <li><strong>Acesse o painel principal</strong> (<code>index.html</code>) e clique no cartão do módulo de <em>Controle de Execução de Rota</em>. 👆</li>
+            <li><strong>Copie o texto completo</strong> da sua rota (gerado a partir dos relatórios ou PDFs de atendimento). 📄📋</li>
+            <li><strong>Cole o conteúdo</strong> no campo de texto indicado na tela do sistema. 📥</li>
+            <li>Clique no botão <strong>"🚀 Analisar e Separar Paradas Individualmente"</strong>. O script lê inteligentemente o texto e cria cards isolados para cada parada numerada. ⚙️🔍</li>
+            <li><strong>Em campo (Operação):</strong> Conforme executa cada atendimento, clique em <strong>✅ Concluído</strong> ou <strong>❌ Não Concluído</strong> diretamente no card. O sistema atualiza instantaneamente as listas separadas. Se errar, use o botão <strong>↩️ Desfazer</strong>. 📱👍🔢</li>
+            <li><strong>Salvamento Automático (<code>localStorage</code>):</strong> Cada clique é salvo direto na memória do seu navegador. Se o celular fechar ou travar, o seu progresso exato estará intacto ao reabrir. 💾🔒</li>
+            <li><strong>Exportação de Relatórios Oficiais:</strong> Assim que finalizar, clique em <strong>📥 Baixar Relatório Final (PDF)</strong> (com formatação limpa e sem poluição visual) ou em <strong>📄 Baixar Resumo (TXT)</strong>. 📥📄</li>
+            <li><strong>Limpar / Nova Rota:</strong> Quando for iniciar uma nova rota do zero, use o botão vermelho <strong>"🗑️ Limpar Rota Salva / Iniciar Nova"</strong>. 🗑️⚡</li>
+        </ol>
+
+        <div class="highlight-box">
+            💡 <strong>Dica de Campo:</strong> Como o salvamento é automático por navegador, você pode usar direto pelo celular sem risco de perder o andamento das paradas diárias.
+        </div>
     </div>
 
-    <h2>2. Como Usar o Extrator (`extrator.html`)</h2>
-    <div class="step-box">
-        <ul>
-            <li><strong>Passo 1:</strong> Clique em "Escolher Arquivo" e selecione sua planilha de rotas ou ordens de serviço.</li>
-            <li><strong>Passo 2:</strong> Escolha o modo de localização desejado:
-                <ul>
-                    <li><em>Endereço com CEP:</em> O sistema busca automaticamente as coordenadas geográficas utilizando o Nominatim (OpenStreetMap) com base na coluna de endereço e na cidade informada.</li>
-                    <li><em>Latitude / Longitude:</em> Utiliza diretamente colunas de coordenadas geográficas já existentes na planilha.</li>
-                </ul>
-            </li>
-            <li><strong>Passo 3:</strong> Selecione na lista quais colunas você deseja que apareçam no relatório final (desmarque o que não for necessário para manter o documento limpo).</li>
-            <li><strong>Passo 4:</strong> Clique em <strong>"Gerar Rota Otimizada"</strong>. O sistema aplicará o algoritmo de ordenação para minimizar deslocamentos e organizar a sequência de atendimento.</li>
-        </ul>
+    <!-- Módulo 2 -->
+    <div class="manual-section em-breve">
+        <h2>🏛️ Módulo 2: Banco de Dados Sólido de Fiscalizações do RS (Em Breve)</h2>
+        <p>Módulo planejado para centralizar e consultar o histórico completo de dados consolidados e normas de fiscalizações técnicas em todo o estado do Rio Grande do Sul. 📊🔍</p>
+        
+        <p><strong>⚙️ O que ele fará:</strong></p>
+        <ol>
+            <li><strong>Consulta Rápida:</strong> Histórico unificado de conformidades e padrões de adequação predial e de redes. 🏢📡</li>
+            <li><strong>Filtros Regionais:</strong> Acesso segmentado a diretrizes aplicadas nas zonas de Porto Alegre, Região Metropolitana e interior do estado. 🗺️📌</li>
+        </ol>
     </div>
 
-    <h2>3. Exportação e Relatórios</h2>
-    <div class="step-box">
-        <ul>
-            <li><strong>Imprimir / Salvar PDF Limpo:</strong> O layout oculta automaticamente os menus laterais, mapas e botões, gerando um documento limpo contendo apenas a tabela sequencial pronta para impressão ou salvamento em PDF.</li>
-            <li><strong>Baixar TXT da Rota:</strong> Gera um arquivo de texto bruto estruturado com a ordem exata das paradas para anotações rápidas ou envio.</li>
-            <li><strong>Abrir Rota no Waze:</strong> Direciona o primeiro ponto de atendimento diretamente para o aplicativo de navegação Waze.</li>
-        </ul>
-    </div>
-
-    <a href="index.html" class="btn-back">⬅️ Voltar para o Menu Principal</a>
+    <a href="index.html" class="btn-back">⬅️ Voltar para o Painel Principal</a>
 </div>
 
 </body>
