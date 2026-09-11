@@ -5,6 +5,8 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Roteirizador Inteligente - Relatório em Texto</title>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+    <!-- Biblioteca html2pdf.js para gerar PDF direto no celular -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
     <!-- Leaflet CSS & JS -->
     <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
     <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
@@ -186,6 +188,7 @@
             display: flex;
             gap: 10px;
             margin-top: 10px;
+            flex-wrap: wrap;
         }
         .btn-print {
             background-color: #d97706;
@@ -196,6 +199,7 @@
             padding: 10px;
             border-radius: 4px;
             flex: 1;
+            min-width: 140px;
             font-size: 14px;
             display: none;
         }
@@ -210,10 +214,12 @@
             padding: 10px;
             border-radius: 4px;
             flex: 1;
+            min-width: 140px;
             font-size: 14px;
             display: none;
             text-align: center;
             text-decoration: none;
+            box-sizing: border-box;
         }
         .btn-waze:hover { background-color: #2b6cb0; }
 
@@ -226,6 +232,7 @@
             padding: 10px;
             border-radius: 4px;
             flex: 1;
+            min-width: 140px;
             font-size: 14px;
             display: none;
         }
@@ -265,20 +272,24 @@
             text-align: center;
         }
 
-        /* Regra de Impressão: Oculta menus e mapa, foca apenas na tabela limpa */
-        @media print {
-            body { background-color: #fff; padding: 0; }
-            .form-section, .btn-back, #mapaVisual, .button-row, .instructions, h2 { display: none !important; }
-            .container { max-width: 100%; padding: 0; box-shadow: none; }
-            .table-responsive { max-height: none; border: none; overflow: visible; }
-            table { border: 1px solid #333; }
-            th { background-color: #ddd !important; color: black !important; }
+        /* Estilo específico para o PDF gerado (oculta o que não importa na exportação) */
+        .pdf-export-mode {
+            background: #fff !important;
+            padding: 15px;
+        }
+        .pdf-export-mode #mapaVisual, 
+        .pdf-export-mode .button-row, 
+        .pdf-export-mode .instructions, 
+        .pdf-export-mode .form-section, 
+        .pdf-export-mode .btn-back,
+        .pdf-export-mode h2 {
+            display: none !important;
         }
     </style>
 </head>
 <body>
 
-<div class="container">
+<div class="container" id="painelPrincipal">
     <h2>Roteirizador Inteligente (Relatório em Texto)</h2>
     
     <div class="form-section">
@@ -360,12 +371,12 @@
         <h3 style="font-size: 14px; margin-bottom: 5px; color: #2d3748;">Lista Sequencial Otimizada (<span id="contadorLinhas">0</span> registros)</h3>
         
         <div class="instructions" id="instrucoesRota" style="display:none;">
-            📋 <strong>Pronto:</strong> Clique em "Imprimir / Salvar PDF" para gerar um documento limpo contendo apenas a tabela sequencial, ou baixe o arquivo de texto bruto.
+            📋 <strong>Pronto:</strong> Clique em "Baixar PDF Limpo" para salvar o relatório diretamente no seu celular, ou baixe o arquivo de texto bruto.
         </div>
 
         <div id="mapaVisual"></div>
 
-        <div class="table-responsive">
+        <div class="table-responsive" id="areaTabelaExportavel">
             <table id="tabelaDados">
                 <thead id="cabecalhoTabela">
                     <tr><th>Aguardando processamento...</th></tr>
@@ -377,7 +388,7 @@
         </div>
 
         <div class="button-row">
-            <button class="btn-print" id="btnImprimir" onclick="window.print()">🖨️ Imprimir / Salvar PDF Limpo</button>
+            <button class="btn-print" id="btnImprimir" onclick="baixarPDFCelular()">📥 Baixar PDF Limpo</button>
             <button class="btn-txt" id="btnTxt" onclick="baixarArquivoTexto()">📄 Baixar TXT da Rota</button>
             <a href="#" id="btnWaze" class="btn-waze" target="_blank">🚗 Abrir Rota no Waze</a>
         </div>
@@ -699,6 +710,29 @@
         });
 
         setTimeout(() => { mapaLeaflet.invalidateSize(); }, 200);
+    }
+
+    function baixarPDFCelular() {
+        if (linhasProcessadasCompletas.length === 0) return;
+
+        const elemento = document.getElementById('painelPrincipal');
+        elemento.classList.add('pdf-export-mode');
+
+        const opcoes = {
+            margin:       10,
+            filename:     'rota_otimizada.pdf',
+            image:        { type: 'jpeg', quality: 0.98 },
+            html2canvas:  { scale: 2, useCORS: true },
+            jsPDF:        { unit: 'mm', format: 'a4', orientation: 'landscape' }
+        };
+
+        html2pdf().from(elemento).set(opcoes).save().then(() => {
+            elemento.classList.remove('pdf-export-mode');
+        }).catch(err => {
+            console.error(err);
+            elemento.classList.remove('pdf-export-mode');
+            alert("Erro ao gerar o PDF no celular.");
+        });
     }
 
     function baixarArquivoTexto() {
